@@ -422,11 +422,7 @@
       box-shadow: 0 0 0 1px #11182711;
     }
 
-    .phone-mark {
-      display: none !important;
-}
-
-    /* ===== Job card ===== */
+        /* ===== Job card ===== */
     .job-card {
       margin-top: 0.5rem;
       display: flex;
@@ -714,11 +710,11 @@
         <div>
           <div class="phonebook-header-title">Control Phonebook</div>
           <div class="phonebook-header-sub">
-            Contacts used for autocomplete &amp; phone icons on the duty board.
+            Contacts used for autocomplete and phone auto-fill on the duty board.
           </div>
         </div>
         <div class="muted">
-          Stored locally in this browser.<br />
+          Stored in Supabase (with local fallback).<br />
           Use the same name here as on the duty board.
         </div>
       </div>
@@ -770,6 +766,7 @@
 <!-- Shared datalist for autocomplete -->
 <datalist id="phonebookNames"></datalist>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   /* ===== CONFIG (same logic as v7) ===== */
   const teams = [
@@ -859,6 +856,15 @@
     ]},
   ];
 
+// ===== Supabase config =====
+const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// This identifies THIS board inside your hub.
+// Keep it stable (e.g. "booking_on_board_wh" or "booking_on_board_derby")
+const BOARD_ID = "booking_on_board_main";
+
   const STORAGE_PREFIX = 'booking_on_board_light_v1_';
 
   const slugify = name =>
@@ -920,7 +926,26 @@
   /* ===== Phonebook model ===== */
   let phonebook = [];
 
-  function loadPhonebook() {
+  async function loadPhonebook() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("contacts")
+      .select("id, name, role, phone, notes")
+      .eq("board_id", BOARD_ID)
+      .order("name", { ascending: true });
+
+    if (error) throw error;
+
+    phonebook = (data || []).map(r => ({
+      id: r.id,
+      name: r.name || "",
+      role: r.role || "",
+      phone: r.phone || "",
+      notes: r.notes || ""
+    }));
+  } catch (e) {
+    console.error("Phonebook load failed (falling back to local cache)", e);
+    // Fallback to existing local storage cache if Supabase is down:
     try {
       const raw = localStorage.getItem(storageKeyPhonebook());
       phonebook = raw ? JSON.parse(raw) : [];
@@ -929,67 +954,116 @@
       phonebook = [];
     }
   }
+}
 
-  function savePhonebook() {
-    localStorage.setItem(storageKeyPhonebook(), JSON.stringify(phonebook));
+async function savePhonebook() {
+  // Keep a local cache too (helps offline)
+  localStorage.setItem(storageKeyPhonebook(), JSON.stringify(phonebook));
+
+  // Push whole set up (simple + reliable)
+  const payload = phonebook.map(c => ({
+    id: c.id || undefined,
+    board_id: BOARD_ID,
+    name: c.name,
+    name_norm: (c.name || "").trim().toLowerCase(),
+    role: c.role || null,
+    phone: c.phone,
+    notes: c.notes || null
+  }));
+
+  // Upsert by unique constraint (board_id, name_norm)
+  const { error } = await supabaseClient
+    .from("contacts")
+    .upsert(payload, { onConflict: "board_id,name_norm" });
+
+  if (error) console.error("Phonebook save failed", error);
+}
+
+  
+  // ===== Helpers for phonebook UI =====
+  function nextPhonebookId() {
+    // Prefer browser native UUID if available
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    // Fallback
+    return "pb_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
-  const nextPhonebookId = () =>
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  async function deleteContactFromSupabase(contact) {
+    try {
+      const name_norm = (contact?.name || "").trim().toLowerCase();
+      if (!name_norm) return;
+      const { error } = await supabaseClient
+        .from("contacts")
+        .delete()
+        .eq("board_id", BOARD_ID)
+        .eq("name_norm", name_norm);
+      if (error) throw error;
+    } catch (e) {
+      console.error("Contact delete failed (will retry on next save)", e);
+    }
+  }
 
-  function refreshPhonebookTable(filterText = '') {
-    const tbody = document.querySelector('#pbTable tbody');
-    const filter = (filterText || '').trim().toLowerCase();
-    tbody.innerHTML = '';
+  function refreshPhonebookTable(filterText = "") {
+    const tbody = document.querySelector("#pbTable tbody");
+    if (!tbody) return;
+
+    const filter = (filterText || "").trim().toLowerCase();
+    tbody.innerHTML = "";
 
     const filtered = phonebook.filter(c => {
       if (!filter) return true;
-      const blob = `${c.name||''} ${c.role||''} ${c.phone||''} ${c.notes||''}`.toLowerCase();
+      const blob = `${c.name||""} ${c.role||""} ${c.phone||""} ${c.notes||""}`.toLowerCase();
       return blob.includes(filter);
     });
 
     if (!filtered.length) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
       td.colSpan = 5;
-      td.textContent = 'No contacts match this search.';
-      td.style.textAlign = 'center';
-      td.style.padding = '0.75rem';
+      td.textContent = "No contacts match this search.";
+      td.style.textAlign = "center";
+      td.style.padding = "0.75rem";
       tr.appendChild(td);
       tbody.appendChild(tr);
       return;
     }
 
     filtered.forEach(c => {
-      const tr = document.createElement('tr');
+      const tr = document.createElement("tr");
 
-      const tdName = document.createElement('td');
-      tdName.textContent = c.name || '';
+      const tdName = document.createElement("td");
+      tdName.textContent = c.name || "";
       tr.appendChild(tdName);
 
-      const tdRole = document.createElement('td');
-      tdRole.textContent = c.role || '';
+      const tdRole = document.createElement("td");
+      tdRole.textContent = c.role || "";
       tr.appendChild(tdRole);
 
-      const tdPhone = document.createElement('td');
-      const span = document.createElement('span');
-      span.className = 'badge badge-phone';
-      span.innerHTML = `<span class="icon">☎</span><span>${c.phone || ''}</span>`;
+      const tdPhone = document.createElement("td");
+      const span = document.createElement("span");
+      span.className = "badge badge-phone";
+      span.innerHTML = `<span>${c.phone || ""}</span>`;
       tdPhone.appendChild(span);
       tr.appendChild(tdPhone);
 
-      const tdNotes = document.createElement('td');
-      tdNotes.textContent = c.notes || '';
+      const tdNotes = document.createElement("td");
+      tdNotes.textContent = c.notes || "";
       tr.appendChild(tdNotes);
 
-      const tdActions = document.createElement('td');
-      const del = document.createElement('button');
-      del.className = 'btn-icon btn-icon-danger';
-      del.textContent = 'Delete';
-      del.addEventListener('click', () => {
-        phonebook = phonebook.filter(x => x.id !== c.id);
-        savePhonebook();
-        const searchVal = document.getElementById('pbSearch')?.value || '';
+      const tdActions = document.createElement("td");
+      const del = document.createElement("button");
+      del.className = "btn-icon btn-icon-danger";
+      del.textContent = "Delete";
+      del.addEventListener("click", async () => {
+        if (!confirm(`Delete ${c.name}?`)) return;
+
+        // Remove locally first
+        phonebook = phonebook.filter(x => (x.name||"").trim().toLowerCase() !== (c.name||"").trim().toLowerCase());
+        // Persist
+        await deleteContactFromSupabase(c);
+        await savePhonebook();
+
+        const searchVal = document.getElementById("pbSearch")?.value || "";
         refreshPhonebookTable(searchVal);
         refreshPhonebookDatalist();
         updateAllPhoneMarks();
@@ -1001,7 +1075,7 @@
     });
   }
 
-  function refreshPhonebookDatalist() {
+function refreshPhonebookDatalist() {
     const dl = document.getElementById('phonebookNames');
     if (!dl) return;
     dl.innerHTML = '';
@@ -1023,16 +1097,14 @@
   function syncPhoneMarkForRow(row) {
     const nameInput  = row.querySelector('.name-input');
     const phoneInput = row.querySelector('.phone-input');
-    const mark       = row.querySelector('.phone-mark');
-    if (!mark) return;
 
     const nameVal  = nameInput ? (nameInput.value || '') : '';
     const phoneVal = phoneInput ? (phoneInput.value || '') : '';
 
     const contact = findContactByName(nameVal);
     const numberFromContact = contact && contact.phone ? contact.phone.trim() : '';
-    const effectiveNumber = numberFromContact || phoneVal.trim();
 
+    // Auto-populate phone only if empty (keeps manual overrides)
     if (numberFromContact && phoneInput && !phoneVal.trim()) {
       phoneInput.value = numberFromContact;
       const teamSlug = row.dataset.team;
@@ -1040,16 +1112,6 @@
       if (teamSlug && index != null) {
         localStorage.setItem(storageKeyPhone(teamSlug, index), numberFromContact);
       }
-    }
-
-    if (effectiveNumber) {
-      mark.classList.add('visible');
-      mark.textContent = '☎';
-      mark.title = effectiveNumber;
-    } else {
-      mark.classList.remove('visible');
-      mark.textContent = '';
-      mark.removeAttribute('title');
     }
   }
 
@@ -1120,7 +1182,7 @@
                        placeholder="Name on duty"
                        list="phonebookNames"
                        value="${savedName.replace(/"/g, '&quot;')}">
-                <span class="phone-mark"></span>
+                
               </div>
             </td>
             <td>
@@ -1153,7 +1215,7 @@
       const jobHtml = `
         <div class="job-card">
           <div class="job-card-label">Job card / handover notes</div>
-          <textarea placeholder="What to remind this team when they book on…">${savedJob}</textarea>
+          <textarea class="job-notes" placeholder="What to remind this team when they book on…">${savedJob}</textarea>
         </div>
       `;
 
@@ -1376,6 +1438,7 @@
     updateOnDutyHighlighting();
     updateOnDutySummary();
     updateAllPhoneMarks();
+  persistBoardState("wipe");
   }
 
   function initToolbar() {
@@ -1452,17 +1515,138 @@
     updateOnDutySummary();
   }
 
+  // ===== Board state snapshotting to Supabase =====
+  function buildBoardStateObject() {
+    const state = {
+      version: 1,
+      captured_at: new Date().toISOString(),
+      teams: []
+    };
+
+    teams.forEach(team => {
+      const slug = slugify(team.name);
+      const shiftsForCard = [...team.shifts];
+      if (team.category === "MOM") shiftsForCard.push({ label: "Additional", time: "" });
+
+      state.teams.push({
+        name: team.name,
+        category: team.category,
+        slug,
+        shifts: shiftsForCard.map((s, i) => ({
+          label: s.label,
+          time: localStorage.getItem(storageKeyTime(slug, i)) || s.time || "",
+          name: localStorage.getItem(storageKeyName(slug, i)) || "",
+          phone: localStorage.getItem(storageKeyPhone(slug, i)) || ""
+        })),
+        job: localStorage.getItem(storageKeyJob(slug)) || ""
+      });
+    });
+
+    return state;
+  }
+
+  let snapshotTimer = null;
+
+  function queueSnapshot(eventType = "change") {
+    // Debounce so we don’t hammer Supabase on every keystroke
+    if (snapshotTimer) clearTimeout(snapshotTimer);
+    snapshotTimer = setTimeout(() => persistBoardState(eventType), 800);
+  }
+
+  async function persistBoardState(eventType = "change") {
+    try {
+      const state = buildBoardStateObject();
+
+      // 1) Upsert latest state
+      const { error: stateErr } = await supabaseClient
+        .from("board_state")
+        .upsert({ board_id: BOARD_ID, state }, { onConflict: "board_id" });
+
+      if (stateErr) throw stateErr;
+
+      // 2) Insert snapshot history
+      const { error: snapErr } = await supabaseClient
+        .from("board_snapshots")
+        .insert({ board_id: BOARD_ID, event_type: eventType, state });
+
+      if (snapErr) throw snapErr;
+    } catch (e) {
+      console.error("Board snapshot failed (offline / RLS / config?)", e);
+    }
+  }
+
+  async function loadLatestBoardState() {
+    try {
+      const { data, error } = await supabaseClient
+        .from("board_state")
+        .select("state")
+        .eq("board_id", BOARD_ID)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data || !data.state) return;
+
+      // Write state into localStorage keys (UI reads from those)
+      const state = data.state;
+      if (!state.teams || !Array.isArray(state.teams)) return;
+
+      state.teams.forEach(t => {
+        const slug = t.slug || slugify(t.name || "");
+        const shifts = Array.isArray(t.shifts) ? t.shifts : [];
+        shifts.forEach((s, i) => {
+          localStorage.setItem(storageKeyTime(slug, i), s.time || "");
+          localStorage.setItem(storageKeyName(slug, i), s.name || "");
+          localStorage.setItem(storageKeyPhone(slug, i), s.phone || "");
+        });
+        localStorage.setItem(storageKeyJob(slug), t.job || "");
+      });
+
+      // Re-render after applying state
+      renderTeams();
+      updateOnDutyHighlighting();
+      updateOnDutySummary();
+      updateAllPhoneMarks();
+    } catch (e) {
+      console.error("Failed to load latest board state (continuing with local)", e);
+    }
+  }
+
+  function initSnapshotHooks() {
+    // Any change to board inputs queues a snapshot.
+    document.addEventListener("input", (e) => {
+      const el = e.target;
+      if (!(el instanceof HTMLElement)) return;
+      if (el.matches(".name-input, .time-input, .phone-input, .job-notes")) {
+        queueSnapshot("change");
+      }
+    });
+
+    // Wipes and resets should snapshot too
+    document.getElementById("resetAllBtn")?.addEventListener("click", () => {
+      queueSnapshot("wipe");
+    });
+  }
+
   /* ===== Bootstrap ===== */
-  loadPhonebook();
-  renderTeams();
-  initToolbar();
-  initNavTabs();
-  initPhonebookView();
-  refreshPhonebookTable('');
-  refreshPhonebookDatalist();
-  updateAllPhoneMarks();
-  tick();
-  setInterval(tick, 30_000);
+  (async () => {
+    await loadPhonebook();
+    await loadLatestBoardState();
+
+    renderTeams();
+    initToolbar();
+    initNavTabs();
+    initPhonebookView();
+    initSnapshotHooks();
+
+    refreshPhonebookTable('');
+    refreshPhonebookDatalist();
+    updateAllPhoneMarks();
+
+    tick();
+    setInterval(tick, 30_000);
+  })();
+;
+
 </script>
 </body>
 </html>
