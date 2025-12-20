@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Booking On Board – Duty Board & Phonebook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* ===== Base layout (Winter Points style) ===== */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      color: #111827;
+    }
+
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    header .env {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    main {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+
+    /* ===== Top controls / nav ===== */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .nav-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .nav-tab {
+      border: none;
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .nav-tab .icon {
+      font-size: 1rem;
+    }
+
+    .nav-tab.active {
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-left: auto;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .filter-label {
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+    }
+
+    .btn {
+      padding: 0.3rem 0.6rem;
+      border-radius: 0.375rem;
+      border: none;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn span.icon {
+      font-size: 1rem;
+    }
+
+    .btn-default {
+      background-color: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-ghost {
+      background-color: transparent;
+      border: 1px dashed #9ca3af;
+      color: #4b5563;
+    }
+
+    .btn-danger {
+      background-color: #ef4444;
+      color: #f9fafb;
+    }
+
+    /* ===== Meta row / summary ===== */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* ===== Generic card ===== */
+    .card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ===== On duty snapshot ===== */
+    .on-duty-summary-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #4b5563;
+      margin-bottom: 0.5rem;
+    }
+
+    .on-duty-empty-message {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .on-duty-groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .on-duty-group {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .on-duty-group-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+    }
+
+    .on-duty-group-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .on-duty-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      font-size: 0.75rem;
+      max-width: 100%;
+      white-space: normal;
+    }
+
+    .on-duty-pill strong {
+      font-weight: 600;
+    }
+
+    .on-duty-pill .role {
+      color: #6b7280;
+    }
+
+    .on-duty-pill .name-empty {
+      color: #b91c1c;
+    }
+
+    .on-duty-pill.on-duty-active {
+      border-color: #10b981;
+      background: #ecfdf5;
+    }
+
+    .on-duty-pill.on-duty-missing {
+      border-color: #f97373;
+      background: #fef2f2;
+    }
+
+    /* ===== Sections & grids ===== */
+    .section-block {
+      margin-top: 1rem;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin: 0 0 0.4rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    /* ===== Team cards ===== */
+    .team-card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      padding: 0.9rem;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 640px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .team-card.on-duty-card {
+      border-color: #10b981;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .team-card.on-duty-card.missing-name-card {
+      border-color: #f97373;
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .team-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .team-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .team-meta {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    .team-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    /* ===== Shift table (inside team card) ===== */
+    .shift-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+      table-layout: fixed;
+    }
+
+    .shift-table th,
+    .shift-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .shift-table thead {
+      background: #f9fafb;
+    }
+
+    .shift-table th {
+      font-weight: 600;
+      color: #4b5563;
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      z-index: 1;
+      font-size: 0.75rem;
+    }
+
+    .shift-table td:nth-child(1),
+    .shift-table th:nth-child(1) {
+      width: 18%;
+    }
+
+    .shift-table td:nth-child(2),
+    .shift-table th:nth-child(2) {
+      width: 18%;
+    }
+
+    .shift-table td:nth-child(3),
+    .shift-table th:nth-child(3) {
+      width: 32%;
+    }
+
+    .shift-table td:nth-child(4),
+    .shift-table th:nth-child(4) {
+      width: 32%;
+    }
+
+    .shift-label {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .shift-time {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      color: #4b5563;
+    }
+
+    .shift-row.on-duty-row {
+      background: #ecfdf5;
+    }
+
+    .shift-row.on-duty-row .shift-time {
+      color: #047857;
+      font-weight: 600;
+    }
+
+    .shift-row.on-duty-row.missing-name-row {
+      background: #fef2f2;
+    }
+
+    .shift-row.on-duty-row.missing-name-row .shift-time {
+      color: #b91c1c;
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-width: 0;
+    }
+
+    .name-input,
+    .time-input,
+    .phone-input {
+      padding: 0.3rem 0.4rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      color: #111827;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .name-input::placeholder,
+    .time-input::placeholder,
+    .phone-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .time-input {
+      width: 100%;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular;
+    }
+
+    .name-input:focus,
+    .time-input:focus,
+    .phone-input:focus {
+      outline: none;
+      border-color: #111827;
+      box-shadow: 0 0 0 1px #11182711;
+    }
+
+    .phone-mark {
+      display: none !important;
+}
+
+    /* ===== Job card ===== */
+    .job-card {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .job-card-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+    }
+
+    .job-card textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .job-card textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    .job-card textarea:focus {
+      outline: none;
+      border-color: #111827;
+      box-shadow: 0 0 0 1px #11182711;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .card-footer .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #9ca3af;
+      margin-right: 0.25rem;
+    }
+
+    .card-footer.on-duty-footer .status-dot {
+      background: #10b981;
+    }
+
+    .card-footer.on-duty-footer.missing-name-footer .status-dot {
+      background: #ef4444;
+    }
+
+    .status-label {
+      vertical-align: middle;
+    }
+
+    /* ===== Phonebook view ===== */
+    .phonebook-header-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .phonebook-header-sub {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .phonebook-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .phonebook-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .field label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.75rem;
+    }
+
+    .field input {
+      padding: 0.3rem 0.4rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      min-width: 140px;
+    }
+
+    .phonebook-search {
+      max-width: 260px;
+      margin-bottom: 0.4rem;
+    }
+
+    .phonebook-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .phonebook-table th,
+    .phonebook-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .phonebook-table thead {
+      background: #f9fafb;
+    }
+
+    .phonebook-table th {
+      font-weight: 600;
+      color: #4b5563;
+      font-size: 0.75rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .badge-phone {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #6ee7b7;
+    }
+
+    .badge-phone .icon {
+      font-size: 0.9rem;
+    }
+
+    .btn-icon {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.375rem;
+      border: none;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-icon-danger {
+      background-color: #ef4444;
+      color: #f9fafb;
+    }
+
+    /* ===== Hidden view helper ===== */
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .toolbar {
+        margin-left: 0;
+      }
+      .phonebook-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .field input {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Booking On Board</h1>
+  <div class="env">
+    Duty board &nbsp;·&nbsp; S&amp;T / OLE / MOM<br />
+    Local device storage · Shared phonebook
+  </div>
+</header>
+
+<main>
+  <!-- TOP ROW: tabs + filters -->
+  <div class="top-bar">
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="board">
+        <span class="icon">📋</span>
+        <span>Duty board</span>
+      </button>
+      <button class="nav-tab" data-view="phonebook">
+        <span class="icon">📞</span>
+        <span>Phonebook</span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <span class="filter-label">Filter</span>
+      <button class="btn btn-default" id="showAllBtn">
+        <span class="icon">🗂</span>
+        <span>All teams</span>
+      </button>
+      <button class="btn btn-default" id="showOnDutyBtn">
+        <span class="icon">✅</span>
+        <span>On duty now</span>
+      </button>
+      <button class="btn btn-ghost" id="clearFiltersBtn">
+        <span class="icon">🔄</span>
+        <span>Reset view</span>
+      </button>
+      <button class="btn btn-danger" id="resetAllBtn" title="Clear all names & notes stored on this device">
+        <span class="icon">🧹</span>
+        <span>Clear today</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div id="summaryText" class="muted">
+      On duty snapshot based on current time.
+    </div>
+    <div class="muted">
+      Now: <span id="nowLabel"></span>
+    </div>
+  </div>
+
+  <!-- ===== Duty board view ===== -->
+  <div id="view-board">
+    <div id="onDutySummary" class="card"></div>
+
+    <div class="section-block" data-section="MOM">
+      <h2 class="section-title">MOM Teams</h2>
+      <div class="grid" id="grid-mom"></div>
+    </div>
+
+    <div class="section-block" data-section="S&T">
+      <h2 class="section-title">S&amp;T Fault Teams</h2>
+      <div class="grid" id="grid-st"></div>
+    </div>
+
+    <div class="section-block" data-section="OLE">
+      <h2 class="section-title">OLE Fault Teams</h2>
+      <div class="grid" id="grid-ole"></div>
+    </div>
+  </div>
+
+  <!-- ===== Phonebook view ===== -->
+  <div id="view-phonebook" class="hidden">
+    <div class="card">
+      <div class="phonebook-flex">
+        <div>
+          <div class="phonebook-header-title">Control Phonebook</div>
+          <div class="phonebook-header-sub">
+            Contacts used for autocomplete &amp; phone icons on the duty board.
+          </div>
+        </div>
+        <div class="muted">
+          Stored locally in this browser.<br />
+          Use the same name here as on the duty board.
+        </div>
+      </div>
+
+      <div class="phonebook-form">
+        <div class="field">
+          <label for="pbName">Name</label>
+          <input id="pbName" type="text" placeholder="e.g. Derby MOM 1" />
+        </div>
+        <div class="field">
+          <label for="pbRole">Role / Team</label>
+          <input id="pbRole" type="text" placeholder="MOM, S&amp;T, OLE" />
+        </div>
+        <div class="field">
+          <label for="pbPhone">Phone number</label>
+          <input id="pbPhone" type="text" placeholder="07..., desk line etc." />
+        </div>
+        <div class="field">
+          <label for="pbNotes">Notes</label>
+          <input id="pbNotes" type="text" placeholder="Coverage / base / quirks" />
+        </div>
+        <button class="btn btn-default" id="pbAddBtn">
+          <span class="icon">➕</span>
+          <span>Add contact</span>
+        </button>
+      </div>
+
+      <div class="field phonebook-search">
+        <label for="pbSearch">Search contacts</label>
+        <input id="pbSearch" type="text" placeholder="Filter by name, role, phone, notes" />
+      </div>
+
+      <table class="phonebook-table" id="pbTable">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role / Team</th>
+          <th>Phone</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- Shared datalist for autocomplete -->
+<datalist id="phonebookNames"></datalist>
+
+<script>
+  /* ===== CONFIG (same logic as v7) ===== */
+  const teams = [
+    { name: 'Derby West S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '06:30-14:30' },
+      { label: 'Late Turn',  time: '13:30-21:30' },
+      { label: 'Night Turn', time: '18:30-06:30' },
+    ]},
+    { name: 'Bedford S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '06:00-18:00' },
+      { label: 'Late Turn',  time: '13:00-21:00' },
+      { label: 'Night Turn', time: '18:00-06:00' },
+    ]},
+    { name: 'Derby East S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '06:30-14:30' },
+      { label: 'Late Turn',  time: '13:30-21:30' },
+      { label: 'Night Turn', time: '21:30-06:30' },
+    ]},
+    { name: 'Luton S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '07:00-14:00' },
+      { label: 'Late Turn',  time: '13:00-20:00' },
+    ]},
+    { name: 'West Hampstead S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '07:00-15:00' },
+      { label: 'Late Turn',  time: '12:00-22:00' },
+      { label: 'Night Turn', time: '20:00-06:00' },
+    ]},
+    { name: 'Leicester S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '06:00-14:00' },
+      { label: 'Late Turn',  time: '14:00-18:00' },
+      { label: 'Night Turn', time: '18:00-06:00' },
+    ]},
+    { name: 'Oakham S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '07:00-16:00' },
+      { label: 'Friday Only', time: '07:00-14:00' },
+    ]},
+    { name: 'Lincoln S&T Fault Team', category: 'S&T', shifts: [
+      { label: 'Early Turn', time: '06:00-14:00' },
+      { label: 'Late Turn',  time: '14:00-22:00' },
+    ]},
+    { name: 'Bedford OLE Fault Team', category: 'OLE', shifts: [
+      { label: 'Days',  time: '07:00-14:00' },
+      { label: 'Lates', time: '14:00-21:00' },
+      { label: 'Nights',time: '21:00-07:00' },
+    ]},
+    { name: 'Kettering OLE Fault Team', category: 'OLE', shifts: [
+      { label: 'Days',  time: '07:00-14:00' },
+      { label: 'Lates', time: '14:00-21:00' },
+      { label: 'Nights',time: '21:00-07:00' },
+    ]},
+    { name: 'Derby MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '05:30-17:30' },
+      { label: 'Nights', time: '17:30-05:30' },
+    ]},
+    { name: 'Bedford MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '07:00-19:00' },
+      { label: 'Nights', time: '19:00-07:00' },
+    ]},
+    { name: 'Nottingham MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '06:00-18:00' },
+      { label: 'Nights', time: '18:00-06:00' },
+    ]},
+    { name: 'Elstree MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '07:00-19:00' },
+      { label: 'Nights', time: '19:00-07:00' },
+    ]},
+    { name: 'Leicester MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '06:00-14:00' },
+      { label: 'Lates',  time: '14:00-22:00' },
+      { label: 'Nights', time: '22:00-06:00' },
+    ]},
+    { name: 'Kentish Town MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '07:00-19:00' },
+      { label: 'Nights', time: '19:00-07:00' },
+    ]},
+    { name: 'Lincoln MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '07:00-19:00' },
+      { label: 'Nights', time: '19:00-07:00' },
+    ]},
+    { name: 'Kettering MOM', category: 'MOM', shifts: [
+      { label: 'Days',   time: '06:00-18:00' },
+      { label: 'Nights', time: '18:00-06:00' },
+    ]},
+    { name: 'Chesterfield MOM', category: 'MOM', shifts: [
+      { label: 'AM',     time: '09:00-16:00' },
+      { label: 'PM',     time: '09:00-16:00' },
+    ]},
+  ];
+
+  const STORAGE_PREFIX = 'booking_on_board_light_v1_';
+
+  const slugify = name =>
+    name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+  function parseTimeToMinutes(raw) {
+    if (!raw) return null;
+    const s = raw.replace(/\s+/g, '');
+    const parts = s.split(':');
+    let h, m;
+    if (parts.length === 2) {
+      h = parseInt(parts[0], 10);
+      m = parseInt(parts[1], 10);
+    } else if (s.length === 4) {
+      h = parseInt(s.slice(0, 2), 10);
+      m = parseInt(s.slice(2, 4), 10);
+    } else return null;
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
+    return h * 60 + m;
+  }
+
+  function parseRange(rangeStr) {
+    if (!rangeStr) return null;
+    if (/additional/i.test(rangeStr)) return null;
+    const cleaned = rangeStr.replace(/\s+/g, '');
+    const parts = cleaned.split('-');
+    if (parts.length !== 2) return null;
+    const start = parseTimeToMinutes(parts[0]);
+    const end   = parseTimeToMinutes(parts[1]);
+    if (start == null || end == null) return null;
+    return { start, end };
+  }
+
+  function isNowInRange(range, nowMinutes) {
+    if (!range) return false;
+    const { start, end } = range;
+    if (start === end) return false;
+    if (start < end) return nowMinutes >= start && nowMinutes < end;
+    return nowMinutes >= start || nowMinutes < end;
+  }
+
+  function getNowMinutes() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  }
+
+  function formatNowString() {
+    const now = new Date();
+    const pad = n => n.toString().padStart(2, '0');
+    return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+
+  const storageKeyName      = (slug, i) => `${STORAGE_PREFIX}name_${slug}_${i}`;
+  const storageKeyTime      = (slug, i) => `${STORAGE_PREFIX}time_${slug}_${i}`;
+  const storageKeyJob       = slug      => `${STORAGE_PREFIX}job_${slug}`;
+  const storageKeyPhone     = (slug, i) => `${STORAGE_PREFIX}phone_${slug}_${i}`;
+  const storageKeyPhonebook = ()        => `${STORAGE_PREFIX}phonebook`;
+
+  /* ===== Phonebook model ===== */
+  let phonebook = [];
+
+  function loadPhonebook() {
+    try {
+      const raw = localStorage.getItem(storageKeyPhonebook());
+      phonebook = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(phonebook)) phonebook = [];
+    } catch {
+      phonebook = [];
+    }
+  }
+
+  function savePhonebook() {
+    localStorage.setItem(storageKeyPhonebook(), JSON.stringify(phonebook));
+  }
+
+  const nextPhonebookId = () =>
+    Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  function refreshPhonebookTable(filterText = '') {
+    const tbody = document.querySelector('#pbTable tbody');
+    const filter = (filterText || '').trim().toLowerCase();
+    tbody.innerHTML = '';
+
+    const filtered = phonebook.filter(c => {
+      if (!filter) return true;
+      const blob = `${c.name||''} ${c.role||''} ${c.phone||''} ${c.notes||''}`.toLowerCase();
+      return blob.includes(filter);
+    });
+
+    if (!filtered.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 5;
+      td.textContent = 'No contacts match this search.';
+      td.style.textAlign = 'center';
+      td.style.padding = '0.75rem';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(c => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = c.name || '';
+      tr.appendChild(tdName);
+
+      const tdRole = document.createElement('td');
+      tdRole.textContent = c.role || '';
+      tr.appendChild(tdRole);
+
+      const tdPhone = document.createElement('td');
+      const span = document.createElement('span');
+      span.className = 'badge badge-phone';
+      span.innerHTML = `<span class="icon">☎</span><span>${c.phone || ''}</span>`;
+      tdPhone.appendChild(span);
+      tr.appendChild(tdPhone);
+
+      const tdNotes = document.createElement('td');
+      tdNotes.textContent = c.notes || '';
+      tr.appendChild(tdNotes);
+
+      const tdActions = document.createElement('td');
+      const del = document.createElement('button');
+      del.className = 'btn-icon btn-icon-danger';
+      del.textContent = 'Delete';
+      del.addEventListener('click', () => {
+        phonebook = phonebook.filter(x => x.id !== c.id);
+        savePhonebook();
+        const searchVal = document.getElementById('pbSearch')?.value || '';
+        refreshPhonebookTable(searchVal);
+        refreshPhonebookDatalist();
+        updateAllPhoneMarks();
+      });
+      tdActions.appendChild(del);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function refreshPhonebookDatalist() {
+    const dl = document.getElementById('phonebookNames');
+    if (!dl) return;
+    dl.innerHTML = '';
+    const sorted = [...phonebook].sort((a, b) => (a.name||'').localeCompare(b.name||''));
+    sorted.forEach(c => {
+      if (!c.name) return;
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      dl.appendChild(opt);
+    });
+  }
+
+  function findContactByName(name) {
+    const n = name.trim().toLowerCase();
+    if (!n) return null;
+    return phonebook.find(c => (c.name||'').trim().toLowerCase() === n) || null;
+  }
+
+  function syncPhoneMarkForRow(row) {
+    const nameInput  = row.querySelector('.name-input');
+    const phoneInput = row.querySelector('.phone-input');
+    const mark       = row.querySelector('.phone-mark');
+    if (!mark) return;
+
+    const nameVal  = nameInput ? (nameInput.value || '') : '';
+    const phoneVal = phoneInput ? (phoneInput.value || '') : '';
+
+    const contact = findContactByName(nameVal);
+    const numberFromContact = contact && contact.phone ? contact.phone.trim() : '';
+    const effectiveNumber = numberFromContact || phoneVal.trim();
+
+    if (numberFromContact && phoneInput && !phoneVal.trim()) {
+      phoneInput.value = numberFromContact;
+      const teamSlug = row.dataset.team;
+      const index = row.dataset.index;
+      if (teamSlug && index != null) {
+        localStorage.setItem(storageKeyPhone(teamSlug, index), numberFromContact);
+      }
+    }
+
+    if (effectiveNumber) {
+      mark.classList.add('visible');
+      mark.textContent = '☎';
+      mark.title = effectiveNumber;
+    } else {
+      mark.classList.remove('visible');
+      mark.textContent = '';
+      mark.removeAttribute('title');
+    }
+  }
+
+  function updateAllPhoneMarks() {
+    document.querySelectorAll('.shift-row').forEach(r => syncPhoneMarkForRow(r));
+  }
+
+  /* ===== Rendering duty board ===== */
+  function renderTeams() {
+    const momGrid = document.getElementById('grid-mom');
+    const stGrid  = document.getElementById('grid-st');
+    const oleGrid = document.getElementById('grid-ole');
+
+    momGrid.innerHTML = '';
+    stGrid.innerHTML  = '';
+    oleGrid.innerHTML = '';
+
+    teams.forEach(team => {
+      const slug = slugify(team.name);
+      const card = document.createElement('div');
+      card.className = 'team-card';
+      card.dataset.teamSlug = slug;
+      card.dataset.teamName = team.name;
+      card.dataset.category = team.category;
+
+      const roleTag = team.category === 'MOM'
+        ? 'MOM'
+        : (team.category === 'OLE' ? 'OLE Fault Team' : 'S&T Fault Team');
+
+      const headerHtml = `
+        <div class="team-header">
+          <div class="team-title">${team.name}</div>
+          <div class="team-meta">
+            <span class="team-tag">${roleTag}</span>
+          </div>
+        </div>
+      `;
+
+      const shiftsForCard = [...team.shifts];
+      if (team.category === 'MOM') {
+        shiftsForCard.push({ label: 'Additional', time: '' });
+      }
+
+      let rowsHtml = '';
+      shiftsForCard.forEach((shift, index) => {
+        const nameKey  = storageKeyName(slug, index);
+        const timeKey  = storageKeyTime(slug, index);
+        const phoneKey = storageKeyPhone(slug, index);
+
+        const savedName  = localStorage.getItem(nameKey) || '';
+        const savedTime  = (localStorage.getItem(timeKey) || shift.time || '').replace(/"/g, '&quot;');
+        const savedPhone = (localStorage.getItem(phoneKey) || '').replace(/"/g, '&quot;');
+        const labelSafe  = shift.label.replace(/"/g, '&quot;');
+
+        rowsHtml += `
+          <tr class="shift-row"
+              data-team="${slug}"
+              data-index="${index}"
+              data-label="${labelSafe}">
+            <td class="shift-label">${shift.label}</td>
+            <td class="shift-time">
+              <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}">
+            </td>
+            <td>
+              <div class="name-cell">
+                <input type="text"
+                       class="name-input"
+                       placeholder="Name on duty"
+                       list="phonebookNames"
+                       value="${savedName.replace(/"/g, '&quot;')}">
+                <span class="phone-mark"></span>
+              </div>
+            </td>
+            <td>
+              <input type="text"
+                     class="phone-input"
+                     placeholder="Phone"
+                     value="${savedPhone}">
+            </td>
+          </tr>
+        `;
+      });
+
+      const tableHtml = `
+        <table class="shift-table">
+          <thead>
+          <tr>
+            <th>Shift</th>
+            <th>Time</th>
+            <th>Name</th>
+            <th>Phone</th>
+          </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+
+      const jobKey   = storageKeyJob(slug);
+      const savedJob = localStorage.getItem(jobKey) || '';
+
+      const jobHtml = `
+        <div class="job-card">
+          <div class="job-card-label">Job card / handover notes</div>
+          <textarea placeholder="What to remind this team when they book on…">${savedJob}</textarea>
+        </div>
+      `;
+
+      const footerHtml = `
+        <div class="card-footer">
+          <div>
+            <span class="status-dot"></span>
+            <span class="status-label">No active shift</span>
+          </div>
+          <div class="updated-label"></div>
+        </div>
+      `;
+
+      card.innerHTML = headerHtml + tableHtml + jobHtml + footerHtml;
+
+      if (team.category === 'MOM') momGrid.appendChild(card);
+      else if (team.category === 'OLE') oleGrid.appendChild(card);
+      else stGrid.appendChild(card);
+
+      const rows = card.querySelectorAll('.shift-row');
+      rows.forEach((row, index) => {
+        const nameInput  = row.querySelector('.name-input');
+        const timeInput  = row.querySelector('.time-input');
+        const phoneInput = row.querySelector('.phone-input');
+
+        const nameKey  = storageKeyName(slug, index);
+        const timeKey  = storageKeyTime(slug, index);
+        const phoneKey = storageKeyPhone(slug, index);
+
+        if (nameInput) {
+          nameInput.addEventListener('input', () => {
+            localStorage.setItem(nameKey, nameInput.value.trim());
+            touchUpdated(card);
+            updateOnDutySummary();
+            syncPhoneMarkForRow(row);
+          });
+          nameInput.addEventListener('change', () => syncPhoneMarkForRow(row));
+        }
+
+        if (timeInput) {
+          timeInput.addEventListener('input', () => {
+            localStorage.setItem(timeKey, timeInput.value.trim());
+            touchUpdated(card);
+            updateOnDutyHighlighting();
+            updateOnDutySummary();
+          });
+        }
+
+        if (phoneInput) {
+          phoneInput.addEventListener('input', () => {
+            localStorage.setItem(phoneKey, phoneInput.value.trim());
+            touchUpdated(card);
+            syncPhoneMarkForRow(row);
+          });
+        }
+
+        syncPhoneMarkForRow(row);
+      });
+
+      const jobTextarea = card.querySelector('.job-card textarea');
+      if (jobTextarea) {
+        jobTextarea.addEventListener('input', () => {
+          localStorage.setItem(jobKey, jobTextarea.value);
+          touchUpdated(card);
+        });
+      }
+    });
+  }
+
+  function touchUpdated(card) {
+    const label = card.querySelector('.updated-label');
+    if (!label) return;
+    label.textContent = `Last updated ${formatNowString()}`;
+  }
+
+  function refreshClock() {
+    const nowLabel = document.getElementById('nowLabel');
+    if (nowLabel) nowLabel.textContent = formatNowString();
+  }
+
+  function updateOnDutyHighlighting() {
+    const nowMinutes = getNowMinutes();
+    const cards = Array.from(document.querySelectorAll('.team-card'));
+
+    cards.forEach(card => {
+      const rows = Array.from(card.querySelectorAll('.shift-row'));
+      let cardOnDuty = false;
+      let cardMissingName = false;
+
+      rows.forEach(row => {
+        row.classList.remove('on-duty-row', 'missing-name-row');
+        const timeInput = row.querySelector('.time-input');
+        const timeStr   = timeInput ? timeInput.value : '';
+        const range     = parseRange(timeStr);
+        if (!range) return;
+        const inRange = isNowInRange(range, nowMinutes);
+        if (inRange) {
+          const nameInput = row.querySelector('.name-input');
+          const nameEmpty = !nameInput || !nameInput.value.trim();
+          row.classList.add('on-duty-row');
+          if (nameEmpty) {
+            row.classList.add('missing-name-row');
+            cardMissingName = true;
+          }
+          cardOnDuty = true;
+        }
+      });
+
+      card.classList.toggle('on-duty-card', cardOnDuty);
+      card.classList.toggle('missing-name-card', cardOnDuty && cardMissingName);
+
+      const footer = card.querySelector('.card-footer');
+      if (footer) {
+        footer.classList.toggle('on-duty-footer', cardOnDuty);
+        footer.classList.toggle('missing-name-footer', cardOnDuty && cardMissingName);
+        const label = footer.querySelector('.status-label');
+        if (label) {
+          if (!cardOnDuty) label.textContent = 'No active shift';
+          else if (cardMissingName) label.textContent = 'Shift active but no name booked on';
+          else label.textContent = 'Shift active';
+        }
+      }
+    });
+  }
+
+  function updateOnDutySummary() {
+    const container = document.getElementById('onDutySummary');
+    if (!container) return;
+
+    const summaryText = document.getElementById('summaryText');
+
+    const rows = Array.from(document.querySelectorAll('.shift-row.on-duty-row'));
+    const active = [];
+
+    rows.forEach(row => {
+      const teamCard = row.closest('.team-card');
+      if (!teamCard) return;
+      const teamName = teamCard.dataset.teamName || '';
+      const label    = row.dataset.label || '';
+      const timeInput= row.querySelector('.time-input');
+      const timeStr  = timeInput ? timeInput.value || '' : '';
+      const nameInput= row.querySelector('.name-input');
+      const name     = nameInput ? nameInput.value.trim() : '';
+      const category = teamCard.dataset.category || '';
+      const role     = category === 'MOM' ? 'MOM' : (category === 'OLE' ? 'OLE' : 'S&T');
+      active.push({ teamName, label, time: timeStr, name, role });
+    });
+
+    if (summaryText) {
+      summaryText.textContent = active.length
+        ? `${active.length} active shifts based on the current timetable.`
+        : `No active shifts found based on the current timetable.`;
+    }
+
+    if (!active.length) {
+      container.innerHTML = `
+        <div class="on-duty-summary-title">On duty snapshot</div>
+        <div class="on-duty-empty-message">
+          No active shifts found right now based on current time &amp; shift times.
+        </div>
+      `;
+      return;
+    }
+
+    const groups = { MOM: [], 'S&T': [], OLE: [] };
+    active.forEach(item => {
+      const key = item.role;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    ['MOM', 'S&T', 'OLE'].forEach(k => groups[k].sort((a, b) => a.teamName.localeCompare(b.teamName)));
+
+    let html = `<div class="on-duty-summary-title">On duty snapshot</div><div class="on-duty-groups">`;
+    Object.entries(groups).forEach(([role, items]) => {
+      if (!items.length) return;
+      html += `<div class="on-duty-group">
+        <div class="on-duty-group-title">${role} teams</div>
+        <div class="on-duty-group-body">
+      `;
+      items.forEach(item => {
+        const missing = !item.name;
+        html += `
+          <span class="on-duty-pill ${missing ? 'on-duty-missing' : 'on-duty-active'}">
+            <span>●</span>
+            <span><strong>${item.teamName}</strong></span>
+            <span class="role">${item.label}</span>
+            <span>${item.time || ''}</span>
+            <span class="${missing ? 'name-empty' : ''}">
+              ${missing ? '(no name booked on)' : item.name}
+            </span>
+          </span>
+        `;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+    container.innerHTML = html;
+  }
+
+  function applyFilterShowAll() {
+    document.querySelectorAll('.team-card').forEach(card => card.classList.remove('hidden'));
+  }
+
+  function applyFilterOnDutyOnly() {
+    document.querySelectorAll('.team-card').forEach(card => {
+      if (card.classList.contains('on-duty-card')) card.classList.remove('hidden');
+      else card.classList.add('hidden');
+    });
+  }
+
+  function resetAllData() {
+    if (!confirm('Clear all names and job cards on this device?')) return;
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(STORAGE_PREFIX) && key !== storageKeyPhonebook()) {
+        localStorage.removeItem(key);
+      }
+    });
+    renderTeams();
+    updateOnDutyHighlighting();
+    updateOnDutySummary();
+    updateAllPhoneMarks();
+  }
+
+  function initToolbar() {
+    document.getElementById('showAllBtn')?.addEventListener('click', applyFilterShowAll);
+    document.getElementById('showOnDutyBtn')?.addEventListener('click', applyFilterOnDutyOnly);
+    document.getElementById('clearFiltersBtn')?.addEventListener('click', applyFilterShowAll);
+    document.getElementById('resetAllBtn')?.addEventListener('click', resetAllData);
+  }
+
+  function initNavTabs() {
+    const tabs = document.querySelectorAll('.nav-tab');
+    const viewBoard = document.getElementById('view-board');
+    const viewPhone = document.getElementById('view-phonebook');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const view = tab.dataset.view;
+        if (view === 'board') {
+          viewBoard.classList.remove('hidden');
+          viewPhone.classList.add('hidden');
+        } else {
+          viewBoard.classList.add('hidden');
+          viewPhone.classList.remove('hidden');
+        }
+      });
+    });
+  }
+
+  function initPhonebookView() {
+    const addBtn     = document.getElementById('pbAddBtn');
+    const nameInput  = document.getElementById('pbName');
+    const roleInput  = document.getElementById('pbRole');
+    const phoneInput = document.getElementById('pbPhone');
+    const notesInput = document.getElementById('pbNotes');
+    const searchInput= document.getElementById('pbSearch');
+
+    addBtn.addEventListener('click', () => {
+      const name  = nameInput.value.trim();
+      const role  = roleInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const notes = notesInput.value.trim();
+
+      if (!name || !phone) {
+        alert('Name and phone number are required.');
+        return;
+      }
+
+      phonebook.push({ id: nextPhonebookId(), name, role, phone, notes });
+      savePhonebook();
+      const searchVal = searchInput?.value || '';
+      refreshPhonebookTable(searchVal);
+      refreshPhonebookDatalist();
+      updateAllPhoneMarks();
+
+      nameInput.value = '';
+      roleInput.value = '';
+      phoneInput.value = '';
+      notesInput.value = '';
+      nameInput.focus();
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        refreshPhonebookTable(searchInput.value);
+      });
+    }
+  }
+
+  function tick() {
+    refreshClock();
+    updateOnDutyHighlighting();
+    updateOnDutySummary();
+  }
+
+  /* ===== Bootstrap ===== */
+  loadPhonebook();
+  renderTeams();
+  initToolbar();
+  initNavTabs();
+  initPhonebookView();
+  refreshPhonebookTable('');
+  refreshPhonebookDatalist();
+  updateAllPhoneMarks();
+  tick();
+  setInterval(tick, 30_000);
+</script>
+</body>
+</html>
