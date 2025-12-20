@@ -865,7 +865,14 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Keep it stable (e.g. "booking_on_board_wh" or "booking_on_board_derby")
 const BOARD_ID = "booking_on_board_main";
 
-  const STORAGE_PREFIX = 'booking_on_board_light_v1_';
+  
+
+  // ===== Live sync flags =====
+  let localDirtyBoard = false;      // local edits not yet pushed
+  let localDirtyContacts = false;   // local phonebook edits not yet pushed
+  let lastAppliedBoardUpdatedAt = null;     // ISO string
+  let lastAppliedContactsUpdatedAt = null;  // ISO string
+const STORAGE_PREFIX = 'booking_on_board_light_v1_';
 
   const slugify = name =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -976,7 +983,9 @@ async function savePhonebook() {
     .from("contacts")
     .upsert(payload, { onConflict: "board_id,name_norm" });
 
-  if (error) console.error("Phonebook save failed", error);
+  if (error) { console.error("Phonebook save failed", error); return; }
+  localDirtyContacts = false;
+  lastAppliedContactsUpdatedAt = new Date().toISOString();
 }
 
   
@@ -1059,7 +1068,9 @@ async function savePhonebook() {
 
         // Remove locally first
         phonebook = phonebook.filter(x => (x.name||"").trim().toLowerCase() !== (c.name||"").trim().toLowerCase());
-        // Persist
+        
+        localDirtyContacts = true;
+// Persist
         await deleteContactFromSupabase(c);
         await savePhonebook();
 
@@ -1489,6 +1500,7 @@ function refreshPhonebookDatalist() {
       }
 
       phonebook.push({ id: nextPhonebookId(), name, role, phone, notes });
+      localDirtyContacts = true;
       savePhonebook();
       const searchVal = searchInput?.value || '';
       refreshPhonebookTable(searchVal);
@@ -1548,7 +1560,9 @@ function refreshPhonebookDatalist() {
   let snapshotTimer = null;
 
   function queueSnapshot(eventType = "change") {
-    // Debounce so we don’t hammer Supabase on every keystroke
+    
+    localDirtyBoard = true;
+// Debounce so we don’t hammer Supabase on every keystroke
     if (snapshotTimer) clearTimeout(snapshotTimer);
     snapshotTimer = setTimeout(() => persistBoardState(eventType), 800);
   }
@@ -1627,7 +1641,73 @@ function refreshPhonebookDatalist() {
     });
   }
 
-  /* ===== Bootstrap ===== */
+  // ===== Background refresh (poll) =====
+function isUserEditing() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = (el.tagName || "").toUpperCase();
+  return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+}
+
+async function refreshFromSupabase() {
+  // Avoid clobbering someone mid-typing.
+  if (isUserEditing()) return;
+
+  // 1) Refresh phonebook (if no local unsynced edits)
+  if (!localDirtyContacts) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("contacts")
+        .select("id, name, role, phone, notes, updated_at")
+        .eq("board_id", BOARD_ID)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (!error && data && data.length) {
+        const remoteUpdated = data[0].updated_at;
+        if (remoteUpdated && remoteUpdated !== lastAppliedContactsUpdatedAt) {
+          await loadPhonebook();
+          refreshPhonebookDatalist();
+          const searchVal = document.getElementById("pbSearch")?.value || "";
+          refreshPhonebookTable(searchVal);
+          updateAllPhoneMarks();
+          lastAppliedContactsUpdatedAt = remoteUpdated;
+        }
+      }
+    } catch (e) {
+      // silent background failure
+      console.warn("Background phonebook refresh failed", e);
+    }
+  }
+
+  // 2) Refresh board state (if no local unsynced edits)
+  if (!localDirtyBoard) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("board_state")
+        .select("updated_at")
+        .eq("board_id", BOARD_ID)
+        .maybeSingle();
+
+      if (!error && data && data.updated_at) {
+        const remoteUpdated = data.updated_at;
+        if (remoteUpdated && remoteUpdated !== lastAppliedBoardUpdatedAt) {
+          await loadLatestBoardState();
+          // Re-render from localStorage keys (existing architecture)
+          renderTeams();
+          updateOnDutyHighlighting();
+          updateOnDutySummary();
+          updateAllPhoneMarks();
+          lastAppliedBoardUpdatedAt = remoteUpdated;
+        }
+      }
+    } catch (e) {
+      console.warn("Background board refresh failed", e);
+    }
+  }
+}
+
+/* ===== Bootstrap ===== */
   (async () => {
     await loadPhonebook();
     await loadLatestBoardState();
@@ -1644,7 +1724,8 @@ function refreshPhonebookDatalist() {
 
     tick();
     setInterval(tick, 30_000);
-  })();
+    setInterval(refreshFromSupabase, 10_000);
+})();
 ;
 
 </script>
