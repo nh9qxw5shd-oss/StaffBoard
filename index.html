@@ -628,6 +628,19 @@
         min-width: 0;
       }
     }
+  .mode-select{
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 0.75rem;
+  color: #111827;
+}
+.mode-select:focus{
+  outline:none;
+  border-color:#111827;
+  box-shadow:0 0 0 1px #11182711;
+}
   </style>
 </head>
 <body>
@@ -655,23 +668,7 @@
 
     <div class="toolbar">
       <span class="filter-label">Filter</span>
-      <button class="btn btn-default" id="showAllBtn">
-        <span class="icon">🗂</span>
-        <span>All teams</span>
-      </button>
-      <button class="btn btn-default" id="showOnDutyBtn">
-        <span class="icon">✅</span>
-        <span>On duty now</span>
-      </button>
-      <button class="btn btn-ghost" id="clearFiltersBtn">
-        <span class="icon">🔄</span>
-        <span>Reset view</span>
-      </button>
-      <button class="btn btn-danger" id="resetAllBtn" title="Clear all names & notes stored on this device">
-        <span class="icon">🧹</span>
-        <span>Clear today</span>
-      </button>
-    </div>
+      </div>
   </div>
 
   <div class="meta-row">
@@ -785,10 +782,6 @@
       { label: 'Late Turn',  time: '13:30-21:30' },
       { label: 'Night Turn', time: '21:30-06:30' },
     ]},
-    { name: 'Luton S&T Fault Team', category: 'S&T', shifts: [
-      { label: 'Early Turn', time: '07:00-14:00' },
-      { label: 'Late Turn',  time: '13:00-20:00' },
-    ]},
     { name: 'West Hampstead S&T Fault Team', category: 'S&T', shifts: [
       { label: 'Early Turn', time: '07:00-15:00' },
       { label: 'Late Turn',  time: '12:00-22:00' },
@@ -865,14 +858,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Keep it stable (e.g. "booking_on_board_wh" or "booking_on_board_derby")
 const BOARD_ID = "booking_on_board_main";
 
-  
-
-  // ===== Live sync flags =====
-  let localDirtyBoard = false;      // local edits not yet pushed
-  let localDirtyContacts = false;   // local phonebook edits not yet pushed
-  let lastAppliedBoardUpdatedAt = null;     // ISO string
-  let lastAppliedContactsUpdatedAt = null;  // ISO string
-const STORAGE_PREFIX = 'booking_on_board_light_v1_';
+  const STORAGE_PREFIX = 'booking_on_board_light_v1_';
 
   const slugify = name =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -983,9 +969,7 @@ async function savePhonebook() {
     .from("contacts")
     .upsert(payload, { onConflict: "board_id,name_norm" });
 
-  if (error) { console.error("Phonebook save failed", error); return; }
-  localDirtyContacts = false;
-  lastAppliedContactsUpdatedAt = new Date().toISOString();
+  if (error) console.error("Phonebook save failed", error);
 }
 
   
@@ -1068,9 +1052,7 @@ async function savePhonebook() {
 
         // Remove locally first
         phonebook = phonebook.filter(x => (x.name||"").trim().toLowerCase() !== (c.name||"").trim().toLowerCase());
-        
-        localDirtyContacts = true;
-// Persist
+        // Persist
         await deleteContactFromSupabase(c);
         await savePhonebook();
 
@@ -1152,19 +1134,45 @@ function refreshPhonebookDatalist() {
         ? 'MOM'
         : (team.category === 'OLE' ? 'OLE Fault Team' : 'S&T Fault Team');
 
-      const headerHtml = `
-        <div class="team-header">
-          <div class="team-title">${team.name}</div>
-          <div class="team-meta">
-            <span class="team-tag">${roleTag}</span>
-          </div>
-        </div>
-      `;
+      const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
+const savedMode = localStorage.getItem(modeKey) || '12h';
 
-      const shiftsForCard = [...team.shifts];
-      if (team.category === 'MOM') {
-        shiftsForCard.push({ label: 'Additional', time: '' });
-      }
+const headerHtml = `
+  <div class="team-header">
+    <div>
+      <div class="team-title">${team.name}</div>
+    </div>
+    <div class="team-meta">
+      <div style="display:flex; gap:0.5rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+        <span class="team-tag">${roleTag}</span>
+        <label class="muted" style="font-size:0.75rem;">Shift format</label>
+        <select class="mode-select" data-team="${slug}">
+          <option value="12h" ${savedMode==='12h'?'selected':''}>12h (Day/Night)</option>
+          <option value="8h"  ${savedMode==='8h'?'selected':''}>8h (E/A/N)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+`;
+
+      const shiftsForCard = [];
+const modeKey2 = `${STORAGE_PREFIX}mode_${slug}`;
+const mode = localStorage.getItem(modeKey2) || '12h';
+
+if (mode === '8h') {
+  shiftsForCard.push(
+    { label: 'Early Turn', time: '06:00-14:00' },
+    { label: 'Afternoon Turn', time: '14:00-22:00' },
+    { label: 'Night Turn', time: '22:00-06:00' },
+    { label: 'Additional', time: '' }
+  );
+} else {
+  shiftsForCard.push(
+    { label: 'Day Shift', time: '06:00-18:00' },
+    { label: 'Night Shift', time: '18:00-06:00' },
+    { label: 'Additional', time: '' }
+  );
+}
 
       let rowsHtml = '';
       shiftsForCard.forEach((shift, index) => {
@@ -1226,7 +1234,7 @@ function refreshPhonebookDatalist() {
       const jobHtml = `
         <div class="job-card">
           <div class="job-card-label">Job card / handover notes</div>
-          <textarea class="job-notes" placeholder="What to remind this team when they book on…">${savedJob}</textarea>
+          <textarea placeholder="What to remind this team when they book on…">${savedJob}</textarea>
         </div>
       `;
 
@@ -1242,7 +1250,19 @@ function refreshPhonebookDatalist() {
 
       card.innerHTML = headerHtml + tableHtml + jobHtml + footerHtml;
 
-      if (team.category === 'MOM') momGrid.appendChild(card);
+      
+
+      const modeSelect = card.querySelector('.mode-select');
+if (modeSelect) {
+  modeSelect.addEventListener('change', () => {
+    localStorage.setItem(`${STORAGE_PREFIX}mode_${slug}`, modeSelect.value);
+    renderTeams();
+    updateOnDutyHighlighting();
+    updateOnDutySummary();
+    queueSnapshot("change");
+  });
+}
+if (team.category === 'MOM') momGrid.appendChild(card);
       else if (team.category === 'OLE') oleGrid.appendChild(card);
       else stGrid.appendChild(card);
 
@@ -1427,38 +1447,6 @@ function refreshPhonebookDatalist() {
     container.innerHTML = html;
   }
 
-  function applyFilterShowAll() {
-    document.querySelectorAll('.team-card').forEach(card => card.classList.remove('hidden'));
-  }
-
-  function applyFilterOnDutyOnly() {
-    document.querySelectorAll('.team-card').forEach(card => {
-      if (card.classList.contains('on-duty-card')) card.classList.remove('hidden');
-      else card.classList.add('hidden');
-    });
-  }
-
-  function resetAllData() {
-    if (!confirm('Clear all names and job cards on this device?')) return;
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith(STORAGE_PREFIX) && key !== storageKeyPhonebook()) {
-        localStorage.removeItem(key);
-      }
-    });
-    renderTeams();
-    updateOnDutyHighlighting();
-    updateOnDutySummary();
-    updateAllPhoneMarks();
-  persistBoardState("wipe");
-  }
-
-  function initToolbar() {
-    document.getElementById('showAllBtn')?.addEventListener('click', applyFilterShowAll);
-    document.getElementById('showOnDutyBtn')?.addEventListener('click', applyFilterOnDutyOnly);
-    document.getElementById('clearFiltersBtn')?.addEventListener('click', applyFilterShowAll);
-    document.getElementById('resetAllBtn')?.addEventListener('click', resetAllData);
-  }
-
   function initNavTabs() {
     const tabs = document.querySelectorAll('.nav-tab');
     const viewBoard = document.getElementById('view-board');
@@ -1500,7 +1488,6 @@ function refreshPhonebookDatalist() {
       }
 
       phonebook.push({ id: nextPhonebookId(), name, role, phone, notes });
-      localDirtyContacts = true;
       savePhonebook();
       const searchVal = searchInput?.value || '';
       refreshPhonebookTable(searchVal);
@@ -1560,9 +1547,7 @@ function refreshPhonebookDatalist() {
   let snapshotTimer = null;
 
   function queueSnapshot(eventType = "change") {
-    
-    localDirtyBoard = true;
-// Debounce so we don’t hammer Supabase on every keystroke
+    // Debounce so we don’t hammer Supabase on every keystroke
     if (snapshotTimer) clearTimeout(snapshotTimer);
     snapshotTimer = setTimeout(() => persistBoardState(eventType), 800);
   }
@@ -1631,7 +1616,7 @@ function refreshPhonebookDatalist() {
       const el = e.target;
       if (!(el instanceof HTMLElement)) return;
       if (el.matches(".name-input, .time-input, .phone-input, .job-notes")) {
-        queueSnapshot("change");
+        queueSnapshot("edit");
       }
     });
 
@@ -1650,60 +1635,51 @@ function isUserEditing() {
 }
 
 async function refreshFromSupabase() {
-  // Avoid clobbering someone mid-typing.
   if (isUserEditing()) return;
 
-  // 1) Refresh phonebook (if no local unsynced edits)
-  if (!localDirtyContacts) {
-    try {
-      const { data, error } = await supabaseClient
-        .from("contacts")
-        .select("id, name, role, phone, notes, updated_at")
-        .eq("board_id", BOARD_ID)
-        .order("updated_at", { ascending: false })
-        .limit(1);
+  try {
+    // Board state
+    const bs = await supabaseClient
+      .from("board_state")
+      .select("updated_at")
+      .eq("board_id", BOARD_ID)
+      .maybeSingle();
 
-      if (!error && data && data.length) {
-        const remoteUpdated = data[0].updated_at;
-        if (remoteUpdated && remoteUpdated !== lastAppliedContactsUpdatedAt) {
-          await loadPhonebook();
-          refreshPhonebookDatalist();
-          const searchVal = document.getElementById("pbSearch")?.value || "";
-          refreshPhonebookTable(searchVal);
-          updateAllPhoneMarks();
-          lastAppliedContactsUpdatedAt = remoteUpdated;
-        }
+    if (!bs.error && bs.data && bs.data.updated_at) {
+      const remoteUpdated = bs.data.updated_at;
+      if (!window.__lastAppliedBoardUpdatedAt || remoteUpdated !== window.__lastAppliedBoardUpdatedAt) {
+        await loadLatestBoardState();
+        renderTeams();
+        updateOnDutyHighlighting();
+        updateOnDutySummary();
+        window.__lastAppliedBoardUpdatedAt = remoteUpdated;
       }
-    } catch (e) {
-      // silent background failure
-      console.warn("Background phonebook refresh failed", e);
     }
+  } catch (e) {
+    console.warn("Background refresh failed", e);
   }
 
-  // 2) Refresh board state (if no local unsynced edits)
-  if (!localDirtyBoard) {
-    try {
-      const { data, error } = await supabaseClient
-        .from("board_state")
-        .select("updated_at")
-        .eq("board_id", BOARD_ID)
-        .maybeSingle();
+  try {
+    // Phonebook
+    const pb = await supabaseClient
+      .from("contacts")
+      .select("updated_at")
+      .eq("board_id", BOARD_ID)
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
-      if (!error && data && data.updated_at) {
-        const remoteUpdated = data.updated_at;
-        if (remoteUpdated && remoteUpdated !== lastAppliedBoardUpdatedAt) {
-          await loadLatestBoardState();
-          // Re-render from localStorage keys (existing architecture)
-          renderTeams();
-          updateOnDutyHighlighting();
-          updateOnDutySummary();
-          updateAllPhoneMarks();
-          lastAppliedBoardUpdatedAt = remoteUpdated;
-        }
+    if (!pb.error && pb.data && pb.data.length && pb.data[0].updated_at) {
+      const remoteUpdated = pb.data[0].updated_at;
+      if (!window.__lastAppliedContactsUpdatedAt || remoteUpdated !== window.__lastAppliedContactsUpdatedAt) {
+        await loadPhonebook();
+        refreshPhonebookDatalist();
+        const searchVal = document.getElementById("pbSearch")?.value || "";
+        refreshPhonebookTable(searchVal);
+        window.__lastAppliedContactsUpdatedAt = remoteUpdated;
       }
-    } catch (e) {
-      console.warn("Background board refresh failed", e);
     }
+  } catch (e) {
+    console.warn("Background phonebook refresh failed", e);
   }
 }
 
@@ -1712,9 +1688,7 @@ async function refreshFromSupabase() {
     await loadPhonebook();
     await loadLatestBoardState();
 
-    renderTeams();
-    initToolbar();
-    initNavTabs();
+    renderTeams();    initNavTabs();
     initPhonebookView();
     initSnapshotHooks();
 
