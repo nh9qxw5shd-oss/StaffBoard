@@ -5,13 +5,28 @@
   <title>Booking On Board – Duty Board & Phonebook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* ===== Base layout (Winter Points style) ===== */
+    /* ===== Base layout (House style) ===== */
+    :root{
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --grey: #9ca3af;
+
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f3f4f6;
+      background: var(--bg);
       margin: 0;
       padding: 0;
-      color: #111827;
+      color: var(--ink);
     }
 
     header {
@@ -21,17 +36,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     header h1 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       margin: 0;
+      letter-spacing: 0.02em;
     }
 
     header .env {
       font-size: 0.8rem;
-      opacity: 0.8;
+      opacity: 0.85;
       text-align: right;
+      line-height: 1.25;
     }
 
     main {
@@ -41,7 +60,7 @@
     }
 
     .muted {
-      color: #6b7280;
+      color: var(--muted);
       font-size: 0.85rem;
     }
 
@@ -71,6 +90,7 @@
       gap: 0.35rem;
       background: #e5e7eb;
       color: #374151;
+      user-select: none;
     }
 
     .nav-tab .icon {
@@ -92,154 +112,58 @@
     }
 
     .filter-label {
-      font-weight: 600;
+      font-weight: 700;
       color: #374151;
       text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
     }
 
     .btn {
       padding: 0.3rem 0.6rem;
-      border-radius: 0.375rem;
+      border-radius: 0.5rem;
       border: none;
       font-size: 0.8rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
+      user-select: none;
     }
 
-    .btn span.icon {
-      font-size: 1rem;
-    }
+    .btn-default { background-color: #e5e7eb; color: #374151; }
+    .btn-danger  { background-color: var(--red); color: #f9fafb; }
+    .btn-ghost   { background-color: transparent; border: 1px dashed #9ca3af; color: #4b5563; }
 
-    .btn-default {
-      background-color: #e5e7eb;
-      color: #374151;
-    }
-
-    .btn-ghost {
-      background-color: transparent;
-      border: 1px dashed #9ca3af;
-      color: #4b5563;
-    }
-
-    .btn-danger {
-      background-color: #ef4444;
-      color: #f9fafb;
-    }
-
-    /* ===== Meta row / summary ===== */
+    /* ===== Meta row ===== */
     .meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.75rem;
       font-size: 0.8rem;
-      color: #6b7280;
+      color: var(--muted);
       gap: 0.75rem;
       flex-wrap: wrap;
     }
 
     /* ===== Generic card ===== */
     .card {
-      background: #ffffff;
+      background: var(--card);
       border-radius: 0.75rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow);
       padding: 1rem;
       margin-bottom: 1rem;
-    }
-
-    /* ===== On duty snapshot ===== */
-    .on-duty-summary-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #4b5563;
-      margin-bottom: 0.5rem;
-    }
-
-    .on-duty-empty-message {
-      font-size: 0.85rem;
-      color: #6b7280;
-    }
-
-    .on-duty-groups {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 0.75rem;
-    }
-
-    .on-duty-group {
-      background: #f9fafb;
-      border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
-      padding: 0.5rem 0.6rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .on-duty-group-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #6b7280;
-    }
-
-    .on-duty-group-body {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-
-    .on-duty-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
-      font-size: 0.75rem;
-      max-width: 100%;
-      white-space: normal;
-    }
-
-    .on-duty-pill strong {
-      font-weight: 600;
-    }
-
-    .on-duty-pill .role {
-      color: #6b7280;
-    }
-
-    .on-duty-pill .name-empty {
-      color: #b91c1c;
-    }
-
-    .on-duty-pill.on-duty-active {
-      border-color: #10b981;
-      background: #ecfdf5;
-    }
-
-    .on-duty-pill.on-duty-missing {
-      border-color: #f97373;
-      background: #fef2f2;
+      border: 1px solid var(--border);
     }
 
     /* ===== Sections & grids ===== */
-    .section-block {
-      margin-top: 1rem;
-    }
-
+    .section-block { margin-top: 1rem; }
     .section-title {
       font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #6b7280;
+      color: var(--muted);
       margin: 0 0 0.4rem;
     }
 
@@ -250,26 +174,25 @@
       justify-content: center;
     }
 
-    /* ===== Team cards ===== */
+    /* ===== Team cards (Duty board) ===== */
     .team-card {
-      background: #ffffff;
+      background: var(--card);
       border-radius: 0.75rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow);
       padding: 0.9rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-width: 640px;
+      max-width: 500px;
       margin: 0 auto;
       overflow: hidden;
     }
 
     .team-card.on-duty-card {
-      border-color: #10b981;
+      border-color: var(--green);
       box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
     }
-
     .team-card.on-duty-card.missing-name-card {
       border-color: #f97373;
       box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
@@ -284,13 +207,13 @@
 
     .team-title {
       font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
+      font-weight: 650;
+      color: var(--ink);
     }
 
     .team-meta {
       font-size: 0.8rem;
-      color: #6b7280;
+      color: var(--muted);
       text-align: right;
     }
 
@@ -302,9 +225,10 @@
       font-size: 0.75rem;
       background: #e5e7eb;
       color: #374151;
+      border: 1px solid #d1d5db;
     }
 
-    /* ===== Shift table (inside team card) ===== */
+    /* ===== Shift table ===== */
     .shift-table {
       width: 100%;
       border-collapse: collapse;
@@ -313,21 +237,17 @@
       table-layout: fixed;
     }
 
-    .shift-table th,
-    .shift-table td {
+    .shift-table th, .shift-table td {
       padding: 0.35rem 0.4rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: middle;
       white-space: nowrap;
     }
 
-    .shift-table thead {
-      background: #f9fafb;
-    }
-
+    .shift-table thead { background: #f9fafb; }
     .shift-table th {
-      font-weight: 600;
+      font-weight: 650;
       color: #4b5563;
       position: sticky;
       top: 0;
@@ -336,127 +256,85 @@
       font-size: 0.75rem;
     }
 
-    .shift-table td:nth-child(1),
-    .shift-table th:nth-child(1) {
-      width: 18%;
-    }
+    .shift-table td:nth-child(1), .shift-table th:nth-child(1) { width: 18%; }
+    .shift-table td:nth-child(2), .shift-table th:nth-child(2) { width: 18%; }
+    .shift-table td:nth-child(3), .shift-table th:nth-child(3) { width: 32%; }
+    .shift-table td:nth-child(4), .shift-table th:nth-child(4) { width: 32%; }
 
-    .shift-table td:nth-child(2),
-    .shift-table th:nth-child(2) {
-      width: 18%;
-    }
-
-    .shift-table td:nth-child(3),
-    .shift-table th:nth-child(3) {
-      width: 32%;
-    }
-
-    .shift-table td:nth-child(4),
-    .shift-table th:nth-child(4) {
-      width: 32%;
-    }
-
-    .shift-label {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .shift-time {
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    .shift-label { font-weight: 650; color: var(--ink); }
+    .shift-time  {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 0.75rem;
       color: #4b5563;
     }
 
-    .shift-row.on-duty-row {
-      background: #ecfdf5;
-    }
+    .shift-row.on-duty-row { background: #ecfdf5; }
+    .shift-row.on-duty-row .shift-time { color: #047857; font-weight: 650; }
+    .shift-row.on-duty-row.missing-name-row { background: #fef2f2; }
+    .shift-row.on-duty-row.missing-name-row .shift-time { color: #b91c1c; }
 
-    .shift-row.on-duty-row .shift-time {
-      color: #047857;
-      font-weight: 600;
-    }
+    .name-cell { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
 
-    .shift-row.on-duty-row.missing-name-row {
-      background: #fef2f2;
-    }
-
-    .shift-row.on-duty-row.missing-name-row .shift-time {
-      color: #b91c1c;
-    }
-
-    .name-cell {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      min-width: 0;
-    }
-
-    .name-input,
-    .time-input,
-    .phone-input {
+    .name-input, .time-input, .phone-input {
       padding: 0.3rem 0.4rem;
-      border-radius: 0.375rem;
+      border-radius: 0.5rem;
       border: 1px solid #d1d5db;
       font-size: 0.8rem;
-      color: #111827;
+      color: var(--ink);
       width: 100%;
       box-sizing: border-box;
+      background: #ffffff;
     }
 
-    .name-input::placeholder,
-    .time-input::placeholder,
-    .phone-input::placeholder {
-      color: #9ca3af;
-    }
+    .name-input::placeholder, .time-input::placeholder, .phone-input::placeholder { color: #9ca3af; }
 
     .time-input {
       width: 100%;
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
-    .name-input:focus,
-    .time-input:focus,
-    .phone-input:focus {
+    .name-input:focus, .time-input:focus, .phone-input:focus {
       outline: none;
       border-color: #111827;
       box-shadow: 0 0 0 1px #11182711;
     }
 
-        /* ===== Job card ===== */
-    .job-card {
-      margin-top: 0.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+    .mode-select{
+      padding: 0.25rem 0.4rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      font-size: 0.75rem;
+      color: #111827;
+    }
+    .mode-select:focus{
+      outline:none;
+      border-color:#111827;
+      box-shadow:0 0 0 1px #11182711;
     }
 
+    /* ===== Job card ===== */
+    .job-card { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
     .job-card-label {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #6b7280;
+      color: var(--muted);
+      font-weight: 700;
     }
-
     .job-card textarea {
       width: 100%;
       min-height: 60px;
       padding: 0.4rem 0.5rem;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
       border: 1px solid #d1d5db;
       font-size: 0.8rem;
       resize: vertical;
       box-sizing: border-box;
+      background: #ffffff;
     }
-
-    .job-card textarea::placeholder {
-      color: #9ca3af;
-    }
-
-    .job-card textarea:focus {
-      outline: none;
-      border-color: #111827;
-      box-shadow: 0 0 0 1px #11182711;
-    }
+    .job-card textarea::placeholder { color: #9ca3af; }
+    .job-card textarea:focus { outline: none; border-color: #111827; box-shadow: 0 0 0 1px #11182711; }
 
     .card-footer {
       display: flex;
@@ -464,43 +342,19 @@
       align-items: center;
       margin-top: 0.4rem;
       font-size: 0.75rem;
-      color: #6b7280;
+      color: var(--muted);
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-
     .card-footer .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #9ca3af;
+      width: 8px; height: 8px; border-radius: 999px;
+      background: var(--grey);
       margin-right: 0.25rem;
     }
+    .card-footer.on-duty-footer .status-dot { background: var(--green); }
+    .card-footer.on-duty-footer.missing-name-footer .status-dot { background: var(--red); }
 
-    .card-footer.on-duty-footer .status-dot {
-      background: #10b981;
-    }
-
-    .card-footer.on-duty-footer.missing-name-footer .status-dot {
-      background: #ef4444;
-    }
-
-    .status-label {
-      vertical-align: middle;
-    }
-
-    /* ===== Phonebook view ===== */
-    .phonebook-header-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.1rem;
-    }
-
-    .phonebook-header-sub {
-      font-size: 0.85rem;
-      color: #6b7280;
-    }
-
+    /* ===== Phonebook ===== */
     .phonebook-flex {
       display: flex;
       justify-content: space-between;
@@ -509,6 +363,8 @@
       margin-bottom: 0.75rem;
       flex-wrap: wrap;
     }
+    .phonebook-header-title { font-size: 1rem; font-weight: 650; margin-bottom: 0.1rem; }
+    .phonebook-header-sub   { font-size: 0.85rem; color: var(--muted); }
 
     .phonebook-form {
       display: flex;
@@ -519,55 +375,30 @@
       margin-bottom: 0.75rem;
     }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-    }
-
-    .field label {
-      font-weight: 600;
-      color: #374151;
-      font-size: 0.75rem;
-    }
+    .field { display: flex; flex-direction: column; gap: 0.15rem; }
+    .field label { font-weight: 700; color: #374151; font-size: 0.75rem; }
 
     .field input {
       padding: 0.3rem 0.4rem;
-      border-radius: 0.375rem;
+      border-radius: 0.5rem;
       border: 1px solid #d1d5db;
       font-size: 0.8rem;
       min-width: 140px;
+      background: #fff;
     }
 
-    .phonebook-search {
-      max-width: 260px;
-      margin-bottom: 0.4rem;
-    }
+    .phonebook-search { max-width: 260px; margin-bottom: 0.4rem; }
 
-    .phonebook-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
-    .phonebook-table th,
-    .phonebook-table td {
+    .phonebook-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .phonebook-table th, .phonebook-table td {
       padding: 0.4rem 0.5rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: middle;
       white-space: nowrap;
     }
-
-    .phonebook-table thead {
-      background: #f9fafb;
-    }
-
-    .phonebook-table th {
-      font-weight: 600;
-      color: #4b5563;
-      font-size: 0.75rem;
-    }
+    .phonebook-table thead { background: #f9fafb; }
+    .phonebook-table th { font-weight: 650; color: #4b5563; font-size: 0.75rem; }
 
     .badge {
       display: inline-flex;
@@ -577,111 +408,689 @@
       font-size: 0.75rem;
       background: #e5e7eb;
       color: #374151;
+      border: 1px solid #d1d5db;
     }
-
-    .badge-phone {
-      background: #ecfdf5;
-      color: #047857;
-      border: 1px solid #6ee7b7;
-    }
-
-    .badge-phone .icon {
-      font-size: 0.9rem;
-    }
+    .badge-phone { background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
 
     .btn-icon {
       padding: 0.25rem 0.5rem;
-      border-radius: 0.375rem;
+      border-radius: 0.5rem;
       border: none;
       font-size: 0.75rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
     }
+    .btn-icon-danger { background-color: var(--red); color: #f9fafb; }
 
-    .btn-icon-danger {
-      background-color: #ef4444;
-      color: #f9fafb;
+    /* ===== Maintenance Critical Competency ===== */
+    .mcc-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-top: 0.25rem;
     }
 
-    /* ===== Hidden view helper ===== */
+    @media (max-width: 980px){
+      .mcc-grid{ grid-template-columns: 1fr; }
+    }
+
+    .mcc-tile{
+      position: relative;
+      border-radius: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      padding-bottom: 3.25rem; /* room for the + button */
+      background: var(--card);
+      min-height: 300px;
+      overflow: hidden;
+      min-height: 250px;
+      display:flex;
+      flex-direction:column;
+      gap: 0.6rem;
+    }
+
+    .mcc-tile::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity: 0.75;
+      pointer-events:none;
+      background: radial-gradient(900px 320px at 0% 0%, rgba(156,163,175,0.18), rgba(255,255,255,0.0) 60%);
+    }
+
+    .mcc-tile.rag-green{
+      border-color: rgba(16,185,129,0.35);
+    }
+    .mcc-tile.rag-green::before{
+      background: radial-gradient(900px 320px at 0% 0%, rgba(16,185,129,0.22), rgba(255,255,255,0.0) 60%);
+    }
+
+    .mcc-tile.rag-amber{
+      border-color: rgba(245,158,11,0.35);
+    }
+    .mcc-tile.rag-amber::before{
+      background: radial-gradient(900px 320px at 0% 0%, rgba(245,158,11,0.22), rgba(255,255,255,0.0) 60%);
+    }
+
+    .mcc-tile.rag-red{
+      border-color: rgba(239,68,68,0.35);
+    }
+    .mcc-tile.rag-red::before{
+      background: radial-gradient(900px 320px at 0% 0%, rgba(239,68,68,0.22), rgba(255,255,255,0.0) 60%);
+    }
+
+    .mcc-tile.rag-grey{
+      border-color: rgba(156,163,175,0.35);
+    }
+    .mcc-tile.rag-grey::before{
+      background: radial-gradient(900px 320px at 0% 0%, rgba(156,163,175,0.22), rgba(255,255,255,0.0) 60%);
+    }
+
+    .mcc-head{
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:0.75rem;
+    }
+
+    .mcc-title{
+      font-size: 1.05rem;
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+
+    .mcc-badge{ display:inline-flex; align-items:center; padding:0.12rem 0.45rem; border-radius:999px; font-size:0.72rem; font-weight:900; margin-left:0.5rem; background:#111827; color:#f9fafb; }
+    .mcc-updated{ display:inline-flex; margin-left:0.5rem; font-size:0.78rem; color: var(--muted); font-weight:600; }
+
+    .mcc-status{
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .rag-dot{
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      background: var(--grey);
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.9) inset;
+      border: 1px solid rgba(17,24,39,0.08);
+      flex: 0 0 auto;
+    }
+    .rag-dot.green{ background: var(--green); }
+    .rag-dot.amber{ background: var(--amber); }
+    .rag-dot.red{ background: var(--red); }
+    .rag-dot.grey{ background: var(--grey); }
+
+    .mcc-lines{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap: 0.35rem;
+      margin-top: 0.1rem;
+    }
+
+    .mcc-line{
+      display:flex;
+      align-items:flex-start;
+      gap:0.5rem;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+
+    .mcc-line .label{
+      width: 72px;
+      font-weight: 700;
+      color: #111827;
+      flex: 0 0 auto;
+    }
+
+    .mcc-line .msg{
+      flex: 1 1 auto;
+      min-width: 0;
+      color: #374151;
+    }
+
+    .mcc-line .mit{
+      flex: 1 1 auto;
+      min-width: 0;
+      color: #6b7280;
+      font-size: 0.82rem;
+    }
+
+    .mcc-works{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap:0.25rem;
+      margin-top: 0.2rem;
+    }
+
+    .mcc-works .label{
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .mcc-works textarea{
+      width: 100%;
+      min-height: 70px;
+      padding: 0.45rem 0.55rem;
+      border-radius: 0.85rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.82rem;
+      resize: vertical;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.95);
+    }
+    .mcc-works textarea:focus{
+      outline:none;
+      border-color:#111827;
+      box-shadow:0 0 0 1px #11182711;
+    }
+
+    .mcc-plus{
+      position:absolute;
+      right: 0.75rem;
+      bottom: 0.75rem;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #111827;
+      color: #f9fafb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 1.2rem;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.18);
+      z-index: 2;
+    }
+    .mcc-plus:active{ transform: translateY(1px); }
+
+    .mcc-guidance{
+      margin-top: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 0.85rem;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      font-size: 0.85rem;
+      color: #374151;
+    }
+    .mcc-guidance strong{
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .mcc-guidance .row{ margin-top: 0.45rem; display:flex; gap:0.6rem; align-items:flex-start; }
+    .mcc-guidance .row .dot{ width: 12px; height: 12px; border-radius:999px; margin-top: 0.15rem; }
+    .mcc-guidance .row .dot.g{ background: var(--green); }
+    .mcc-guidance .row .dot.a{ background: var(--amber); }
+    .mcc-guidance .row .dot.r{ background: var(--red); }
+
+    
+    /* ===== MCC: Command Structure & Additional Resources ===== */
+    .mcc-cmd{
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 0.25rem 0.75rem 0.75rem;
+    }
+    .mcc-cmd summary{
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0.25rem;
+      user-select: none;
+    }
+    .mcc-cmd summary::-webkit-details-marker{ display:none; }
+    .mcc-cmd .sum-title{
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #111827;
+    }
+    .mcc-cmd .sum-hint{
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: right;
+    }
+    .cmd-toggle-btn{
+      width: 36px;
+      height: 36px;
+      border-radius: 0.85rem;
+      border: 1px solid var(--border);
+      background: #111827;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 1.1rem;
+      line-height: 1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(17,24,39,0.18);
+    }
+    .cmd-toggle-btn:focus{
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(17,24,39,0.18), 0 8px 18px rgba(17,24,39,0.18);
+    }
+
+    .mcc-cmd-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(360px, 1fr));
+      gap: 1.25rem;
+      padding: 0.5rem 0.25rem 0.25rem;
+    }
+    @media (max-width: 980px){
+      .mcc-cmd-grid{ grid-template-columns: 1fr; }
+      .mcc-cmd summary{ flex-direction: column; align-items: flex-start; }
+      .mcc-cmd .sum-hint{ text-align: left; }
+    }
+    .mcc-cmd-card{
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: #fff;
+      padding: 0.9rem;
+    }
+    .mcc-cmd-head{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .mcc-cmd-head .title{
+      font-weight: 900;
+      font-size: 1rem;
+    }
+    .mcc-cmd-block{
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed #d1d5db;
+    }
+    .mcc-cmd-block .label{
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+    .mcc-inline-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    .cmd-strategic-grid{
+  display:grid;
+  grid-template-columns: 260px 200px;
+  gap: 1rem;
+  align-items:center;
+  justify-content:start;
+  max-width: 640px;
+  width: fit-content;
+}
+.cmd-strategic-grid > *{ min-width:0; }
+@media (max-width: 520px){
+      .mcc-inline-grid{ grid-template-columns: 1fr; }
+    }
+    .mcc-input, .mcc-select2{
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.6rem;
+      padding: 0.45rem 0.55rem;
+      font-size: 0.85rem;
+      outline: none;
+      background: #fff;
+    }
+    .mcc-input:focus, .mcc-select2:focus{
+      border-color: #111827;
+      box-shadow: 0 0 0 3px rgba(17,24,39,0.08);
+    }
+    .mcc-row{
+      display:grid;
+      grid-template-columns: 220px 260px auto;
+      gap: 0.9rem;
+      align-items: center;
+      justify-content:start;
+      max-width: 560px;
+      width: fit-content;
+      margin-top: 0.5rem;
+    }
+    .mcc-row.resources{
+      grid-template-columns: 0.8fr 1.1fr 1.1fr 1.2fr 1.2fr auto;
+    }
+    
+    .cmd-res-item{ margin-top: 0.5rem; }
+    .cmd-res-top{
+      display:grid;
+      grid-template-columns: 120px 220px 170px 170px auto;
+      gap: 0.9rem;
+      align-items:center;
+      justify-content:start;
+      max-width: 720px;
+      width: fit-content;
+    }
+    .cmd-res-bottom{
+      display:grid;
+      grid-template-columns: 260px 300px;
+      gap: 0.9rem;
+      margin-top: 0.5rem;
+      align-items:center;
+      justify-content:start;
+      max-width: 600px;
+      width: fit-content;
+    }
+
+    .mcc-row > *, .cmd-res-top > *, .cmd-res-bottom > *{ min-width:0; }
+    
+    @media (max-width: 980px){
+      .cmd-strategic-grid,
+      .mcc-row,
+      .cmd-res-top,
+      .cmd-res-bottom{
+        max-width: 100%;
+      }
+      .cmd-strategic-grid{ grid-template-columns: 1fr; }
+      .mcc-row{ grid-template-columns: 1fr; }
+      .cmd-res-top{ grid-template-columns: 1fr; }
+      .cmd-res-bottom{ grid-template-columns: 1fr; }
+    }
+@media (max-width: 1200px){
+      .mcc-row.resources{
+        grid-template-columns: 1fr 1fr 1fr auto;
+      }
+      .mcc-row.resources select{ grid-column: span 1; }
+      .mcc-row.resources input[type="datetime-local"]{ grid-column: span 1; }
+      .mcc-row.resources .span2{ grid-column: span 2; }
+    }
+    @media (max-width: 980px){
+      .mcc-row.resources{
+        grid-template-columns: 1fr 1fr auto;
+        grid-auto-rows: auto;
+      }
+      .mcc-row.resources .span2{ grid-column: span 2; }
+    }
+    .mcc-row .rm{
+      width: 34px;
+      height: 34px;
+      border-radius: 0.6rem;
+      border: none;
+      cursor: pointer;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 900;
+    }
+    .mcc-add{
+      margin-top: 0.6rem;
+      display:inline-flex;
+      align-items:center;
+      gap: 0.35rem;
+      border: 1px dashed #9ca3af;
+      background: transparent;
+      color: #374151;
+      border-radius: 0.75rem;
+      padding: 0.35rem 0.6rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+/* ===== Modal ===== */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(17,24,39,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal{
+      width: min(920px, 100%);
+      background: #ffffff;
+      border-radius: 1rem;
+      border: 1px solid rgba(229,231,235,0.9);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+      overflow:hidden;
+      max-height: 92vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .modal-head{
+      padding: 0.9rem 1rem;
+      background: #111827;
+      color: #f9fafb;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 1rem;
+    }
+    .modal-head .title{
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+    .modal-head .sub{
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 0.2rem;
+      line-height: 1.25;
+    }
+    .modal-close{
+      background: transparent;
+      border: none;
+      color: #f9fafb;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+    }
+    .modal-close:hover{ background: rgba(255,255,255,0.12); }
+
+    .modal-body{
+      padding: 1.25rem;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap: 0.8rem;
+    }
+
+    .mcc-form-card#\mccOverrideWrap.on .mcc-override-fields{ display:flex !important; }
+
+    .mcc-form-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .mcc-form-card{
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      background: #f9fafb;
+      padding: 0.75rem;
+      display:flex;
+      flex-direction:column;
+      gap: 0.5rem;
+    }
+
+    .mcc-form-card .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mcc-form-card .name{
+      font-weight: 750;
+      color: #111827;
+      display:flex;
+      align-items:center;
+      gap: 0.5rem;
+    }
+
+    .mcc-select{
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.6rem;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      font-size: 0.82rem;
+      min-width: 280px;
+    }
+    .mcc-select:focus{ outline:none; border-color:#111827; box-shadow:0 0 0 1px #11182711; }
+
+    .mcc-mit{
+      display:none;
+      gap: 0.35rem;
+      flex-direction: column;
+    }
+    .mcc-mit label{
+      font-size: 0.72rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .mcc-mit textarea{
+      width: 100%;
+      min-height: 60px;
+      padding: 0.45rem 0.55rem;
+      border-radius: 0.85rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.82rem;
+      resize: vertical;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.95);
+    }
+
+    .mcc-chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items:center;
+    }
+    .mcc-chip{
+      appearance:none;
+      border: 1px dashed #c7cdd8;
+      background: #f8fafc;
+      color: #111827;
+      border-radius: 999px;
+      padding: 0.28rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 650;
+      cursor: pointer;
+      user-select:none;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+    .mcc-chip:hover{ transform: translateY(-1px); border-color:#9ca3af; }
+    .mcc-chip.on{
+      border-style: solid;
+      border-color:#111827;
+      background: #1118270d;
+    }
+    .mcc-chip-empty{
+      font-size:0.8rem;
+      color: var(--muted);
+      padding: 0.25rem 0;
+    }
+    .mcc-mit textarea:focus{ outline:none; border-color:#111827; box-shadow:0 0 0 1px #11182711; }
+
+    .modal-foot{
+      padding: 0.85rem 1rem;
+      border-top: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 0.75rem;
+      background: #ffffff;
+      flex-wrap: wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      font-size: 0.78rem;
+      color: #374151;
+    }
+
     .hidden { display: none !important; }
 
     @media (max-width: 640px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-      }
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .toolbar {
-        margin-left: 0;
-      }
-      .phonebook-form {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .field input {
-        min-width: 0;
-      }
+      header { flex-direction: column; align-items: flex-start; }
+      .top-bar { flex-direction: column; align-items: flex-start; }
+      .toolbar { margin-left: 0; }
+      .phonebook-form { flex-direction: column; align-items: stretch; }
+      .field input { min-width: 0; }
+      .grid { grid-template-columns: 1fr; }
+      .mcc-select{ min-width: 0; width: 100%; }
     }
-  .mode-select{
-  padding: 0.25rem 0.4rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  font-size: 0.75rem;
-  color: #111827;
-}
-.mode-select:focus{
-  outline:none;
-  border-color:#111827;
-  box-shadow:0 0 0 1px #11182711;
-}
   </style>
 </head>
 <body>
 <header>
   <h1>Booking On Board</h1>
   <div class="env">
-    Duty board &nbsp;·&nbsp; S&amp;T / OLE / MOM<br />
-    Local device storage · Shared phonebook
+    Duty board · Phonebook · Maintenance Critical Competency<br />
+    Local device storage · Shared phonebook · Auto-wipe 05:00
   </div>
 </header>
 
 <main>
-  <!-- TOP ROW: tabs + filters -->
   <div class="top-bar">
     <div class="nav-tabs">
-      <button class="nav-tab active" data-view="board">
-        <span class="icon">📋</span>
-        <span>Duty board</span>
+      <button class="nav-tab active" data-view="duty">
+        <span class="icon">📋</span><span>Duty board</span>
       </button>
       <button class="nav-tab" data-view="phonebook">
-        <span class="icon">📞</span>
-        <span>Phonebook</span>
+        <span class="icon">📞</span><span>Phonebook</span>
+      </button>
+      <button class="nav-tab" data-view="mcc">
+        <span class="icon">🧰</span><span>Maintenance Critical Competency</span>
+      </button>
+      <button class="nav-tab" data-view="oncall">
+        <span class="icon">☎️</span><span>On call</span>
       </button>
     </div>
 
     <div class="toolbar">
-      <span class="filter-label">Filter</span>
-      </div>
+      <span class="filter-label">Now</span>
+      <span class="muted"> <span id="nowLabel"></span></span>
+    </div>
   </div>
 
   <div class="meta-row">
-    <div id="summaryText" class="muted">
-      On duty snapshot based on current time.
-    </div>
-    <div class="muted">
-      Now: <span id="nowLabel"></span>
-    </div>
+    <div id="summaryText" class="muted">On duty snapshot based on current time.</div>
+    <div class="muted">Board: <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">booking_on_board_main</span></div>
   </div>
 
   <!-- ===== Duty board view ===== -->
-  <div id="view-board">
+  <div id="view-duty">
     <div id="onDutySummary" class="card"></div>
 
     <div class="section-block" data-section="MOM">
@@ -706,9 +1115,7 @@
       <div class="phonebook-flex">
         <div>
           <div class="phonebook-header-title">Control Phonebook</div>
-          <div class="phonebook-header-sub">
-            Contacts used for autocomplete and phone auto-fill on the duty board.
-          </div>
+          <div class="phonebook-header-sub">Contacts used for autocomplete and phone auto-fill on the duty board.</div>
         </div>
         <div class="muted">
           Stored in Supabase (with local fallback).<br />
@@ -733,10 +1140,7 @@
           <label for="pbNotes">Notes</label>
           <input id="pbNotes" type="text" placeholder="Coverage / base / quirks" />
         </div>
-        <button class="btn btn-default" id="pbAddBtn">
-          <span class="icon">➕</span>
-          <span>Add contact</span>
-        </button>
+        <button class="btn btn-default" id="pbAddBtn"><span class="icon">➕</span><span>Add contact</span></button>
       </div>
 
       <div class="field phonebook-search">
@@ -746,16 +1150,56 @@
 
       <table class="phonebook-table" id="pbTable">
         <thead>
-        <tr>
-          <th>Name</th>
-          <th>Role / Team</th>
-          <th>Phone</th>
-          <th>Notes</th>
-          <th></th>
-        </tr>
+          <tr>
+            <th>Name</th><th>Role / Team</th><th>Phone</th><th>Notes</th><th></th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ===== Maintenance Critical Competency view ===== -->
+  <div id="view-mcc" class="hidden">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+        <div>
+          <div class="phonebook-header-title">Maintenance Critical Competency</div>
+          <div class="phonebook-header-sub">RAG view by DU area. Use the + on each tile to set competency status and mitigation.</div>
+        </div>
+        <div class="muted">
+          Auto wipes daily at <strong>05:00</strong>.<br/>
+          Grey = not yet updated today.
+        </div>
+      </div>
+      <div class="mcc-grid" id="mccGrid"></div>
+
+      
+      <details class="mcc-cmd" id="mccCmdDetails">
+        <summary>
+          <div class="sum-title">Command Structure &amp; Additional Resources</div>
+          <button type="button" class="cmd-toggle-btn" id="mccCmdToggleBtn" aria-label="Toggle command section">+</button>
+        </summary>
+        <div class="mcc-cmd-grid" id="mccCmdGrid"></div>
+      </details>
+
+<div class="mcc-guidance">
+        <strong>RAG Guidance</strong>
+        <div class="row"><div class="dot g"></div><div>– full committed competency within the section</div></div>
+        <div class="row"><div class="dot a"></div><div>– any backfilling or cross coverage arrangements in place, including coverage from the supervisory grade, cross coverage with other sections or utilisation of a MOM for response</div></div>
+        <div class="row"><div class="dot r"></div><div>– there is a risk in place as a competency is not available, with no options for cover in place. This should be utilised if an on call provision in in place to cover (e.g. SMTH requiring L2 attendance on site overnght), given the impact this will have on response beyond an ‘amber’ status.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== On call view (placeholder) ===== -->
+  <div id="view-oncall" class="hidden">
+    <div class="card">
+      <div class="phonebook-header-title">On call</div>
+      <div class="phonebook-header-sub">This tab will be populated later. For now, it sits here looking important.</div>
+      <div class="muted" style="margin-top:0.75rem;">
+        Future: rostered on-call coverage, escalation notes, and quick contacts.
+      </div>
     </div>
   </div>
 </main>
@@ -763,9 +1207,128 @@
 <!-- Shared datalist for autocomplete -->
 <datalist id="phonebookNames"></datalist>
 
+<!-- MCC modal -->
+<div class="modal-backdrop" id="mccModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mccModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="title" id="mccModalTitle">Area settings</div>
+        <div class="sub" id="mccModalSub">Update competency status and mitigation. Anything worse than green needs a mitigation note.</div>
+      </div>
+      <button class="modal-close" id="mccModalClose" title="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="mcc-form-card" id="mccOverrideWrap" style="background:#fff;">
+        <div class="top" style="justify-content:space-between; align-items:center;">
+          <div class="name" style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="rag-dot grey"></span>
+            <span>Declared Risk override</span>
+          </div>
+          <label style="display:flex; align-items:center; gap:0.45rem; font-weight:800; color:#374151; font-size:0.85rem;">
+            <input type="checkbox" id="mccOverrideOn" />
+            Enable
+          </label>
+        </div>
+        <div class="mcc-override-fields" style="display:none; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+          <select class="mcc-select" id="mccOverrideRag">
+            <option value="amber">Amber (Declared)</option>
+            <option value="red">Red (Declared)</option>
+          </select>
+          <div class="mcc-mit" style="display:flex;">
+            <label>Reason / context</label>
+            <textarea id="mccOverrideReason" placeholder="Why are we declaring a risk position? Keep it short, keep it useful."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="mcc-form-grid" id="mccFormGrid"></div>
+      <div class="mcc-form-card" style="background:#fff;">
+        <div class="top" style="justify-content:flex-start;">
+          <div class="name">🛠️ Critical works</div>
+        </div>
+        <div class="mcc-mit" style="display:flex;">
+          <label for="mccCriticalWorksModal">Notes</label>
+          <textarea id="mccCriticalWorksModal" placeholder="Critical works, constraints, resourcing pinch-points..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <div class="pill" id="mccModalStatusPill"><span class="rag-dot grey"></span><span>Not saved</span></div>
+      <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="mccModalResetBtn">Reset tile</button>
+        <button class="btn btn-default" id="mccModalSaveBtn">Save changes</button>
+      </div>
+    </div>
+  
+
+    </div>
+  </div>
+</div>
+
+<!-- Command modal -->
+<div class="modal-backdrop" id="cmdModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cmdModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="title" id="cmdModalTitle">Command structure</div>
+        <div class="sub" id="cmdModalSub">Set strategic contact, tactical leads, and additional resources for this DU area.</div>
+      </div>
+      <button class="modal-close" id="cmdModalClose" title="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="mcc-form-card" style="background:#fff;">
+        <div class="name" style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <div>
+            <div style="font-weight:900; font-size:0.95rem;" id="cmdModalArea">Area</div>
+            <div style="color:var(--muted); font-size:0.82rem;">Keep it concise. This is for rapid coordination during significant events.</div>
+          </div>
+        </div>
+
+        <div class="mcc-cmd-block">
+          <div class="label">Strategic contact</div>
+          <div class="cmd-strategic-grid">
+            <input class="mcc-input" id="cmdStrategicTeam" placeholder="Team / role">
+            <input class="mcc-input" id="cmdStrategicContact" placeholder="Contact name / number">
+          </div>
+        </div>
+
+        <div class="mcc-cmd-block">
+          <div class="label">Tactical leads</div>
+          <div id="cmdTacticalList"></div>
+          <button class="mcc-add" id="cmdAddTactical">+ Add tactical lead</button>
+        </div>
+
+        <div class="mcc-cmd-block">
+          <div class="label">Resources</div>
+          <div id="cmdResourceList"></div>
+          <button class="mcc-add" id="cmdAddResource">+ Add resource</button>
+        </div>
+      </div>
+
+      <div class="modal-foot" style="display:flex; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="cmdModalClearBtn">Clear</button>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="cmdModalCancelBtn">Cancel</button>
+          <button class="btn btn-default" id="cmdModalSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  /* ===== CONFIG (same logic as v7) ===== */
+  /* ===========================
+     DUTY BOARD + PHONEBOOK (existing logic kept)
+     =========================== */
+
   const teams = [
     { name: 'Derby West S&T Fault Team', category: 'S&T', shifts: [
       { label: 'Early Turn', time: '06:30-14:30' },
@@ -849,24 +1412,31 @@
     ]},
   ];
 
-// ===== Supabase config =====
-const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ===== Supabase config =====
+  const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
 
-// This identifies THIS board inside your hub.
-// Keep it stable (e.g. "booking_on_board_wh" or "booking_on_board_derby")
-const BOARD_ID = "booking_on_board_main";
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
-  const STORAGE_PREFIX = 'booking_on_board_light_v1_';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const BOARD_ID = "booking_on_board_main";
+  const STORAGE_PREFIX = "booking_on_board_light_v1_";
 
   const slugify = name =>
-    name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
   function parseTimeToMinutes(raw) {
     if (!raw) return null;
-    const s = raw.replace(/\s+/g, '');
-    const parts = s.split(':');
+    const s = raw.replace(/\s+/g, "");
+    const parts = s.split(":");
     let h, m;
     if (parts.length === 2) {
       h = parseInt(parts[0], 10);
@@ -882,11 +1452,11 @@ const BOARD_ID = "booking_on_board_main";
   function parseRange(rangeStr) {
     if (!rangeStr) return null;
     if (/additional/i.test(rangeStr)) return null;
-    const cleaned = rangeStr.replace(/\s+/g, '');
-    const parts = cleaned.split('-');
+    const cleaned = rangeStr.replace(/\s+/g, "");
+    const parts = cleaned.split("-");
     if (parts.length !== 2) return null;
     const start = parseTimeToMinutes(parts[0]);
-    const end   = parseTimeToMinutes(parts[1]);
+    const end = parseTimeToMinutes(parts[1]);
     if (start == null || end == null) return null;
     return { start, end };
   }
@@ -906,7 +1476,7 @@ const BOARD_ID = "booking_on_board_main";
 
   function formatNowString() {
     const now = new Date();
-    const pad = n => n.toString().padStart(2, '0');
+    const pad = n => n.toString().padStart(2, "0");
     return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
   }
 
@@ -920,64 +1490,56 @@ const BOARD_ID = "booking_on_board_main";
   let phonebook = [];
 
   async function loadPhonebook() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("contacts")
-      .select("id, name, role, phone, notes")
-      .eq("board_id", BOARD_ID)
-      .order("name", { ascending: true });
-
-    if (error) throw error;
-
-    phonebook = (data || []).map(r => ({
-      id: r.id,
-      name: r.name || "",
-      role: r.role || "",
-      phone: r.phone || "",
-      notes: r.notes || ""
-    }));
-  } catch (e) {
-    console.error("Phonebook load failed (falling back to local cache)", e);
-    // Fallback to existing local storage cache if Supabase is down:
     try {
-      const raw = localStorage.getItem(storageKeyPhonebook());
-      phonebook = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(phonebook)) phonebook = [];
-    } catch {
-      phonebook = [];
+      const { data, error } = await supabaseClient
+        .from("contacts")
+        .select("id, name, role, phone, notes")
+        .eq("board_id", BOARD_ID)
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+
+      phonebook = (data || []).map(r => ({
+        id: r.id,
+        name: r.name || "",
+        role: r.role || "",
+        phone: r.phone || "",
+        notes: r.notes || ""
+      }));
+    } catch (e) {
+      console.error("Phonebook load failed (falling back to local cache)", e);
+      try {
+        const raw = localStorage.getItem(storageKeyPhonebook());
+        phonebook = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(phonebook)) phonebook = [];
+      } catch {
+        phonebook = [];
+      }
     }
   }
-}
 
-async function savePhonebook() {
-  // Keep a local cache too (helps offline)
-  localStorage.setItem(storageKeyPhonebook(), JSON.stringify(phonebook));
+  async function savePhonebook() {
+    localStorage.setItem(storageKeyPhonebook(), JSON.stringify(phonebook));
 
-  // Push whole set up (simple + reliable)
-  const payload = phonebook.map(c => ({
-    id: c.id || undefined,
-    board_id: BOARD_ID,
-    name: c.name,
-    name_norm: (c.name || "").trim().toLowerCase(),
-    role: c.role || null,
-    phone: c.phone,
-    notes: c.notes || null
-  }));
+    const payload = phonebook.map(c => ({
+      id: c.id || undefined,
+      board_id: BOARD_ID,
+      name: c.name,
+      name_norm: (c.name || "").trim().toLowerCase(),
+      role: c.role || null,
+      phone: c.phone,
+      notes: c.notes || null
+    }));
 
-  // Upsert by unique constraint (board_id, name_norm)
-  const { error } = await supabaseClient
-    .from("contacts")
-    .upsert(payload, { onConflict: "board_id,name_norm" });
+    const { error } = await supabaseClient
+      .from("contacts")
+      .upsert(payload, { onConflict: "board_id,name_norm" });
 
-  if (error) console.error("Phonebook save failed", error);
-}
+    if (error) console.error("Phonebook save failed", error);
+  }
 
-  
-  // ===== Helpers for phonebook UI =====
   function nextPhonebookId() {
-    // Prefer browser native UUID if available
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-    // Fallback
     return "pb_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
@@ -1050,9 +1612,7 @@ async function savePhonebook() {
       del.addEventListener("click", async () => {
         if (!confirm(`Delete ${c.name}?`)) return;
 
-        // Remove locally first
         phonebook = phonebook.filter(x => (x.name||"").trim().toLowerCase() !== (c.name||"").trim().toLowerCase());
-        // Persist
         await deleteContactFromSupabase(c);
         await savePhonebook();
 
@@ -1068,36 +1628,35 @@ async function savePhonebook() {
     });
   }
 
-function refreshPhonebookDatalist() {
-    const dl = document.getElementById('phonebookNames');
+  function refreshPhonebookDatalist() {
+    const dl = document.getElementById("phonebookNames");
     if (!dl) return;
-    dl.innerHTML = '';
-    const sorted = [...phonebook].sort((a, b) => (a.name||'').localeCompare(b.name||''));
+    dl.innerHTML = "";
+    const sorted = [...phonebook].sort((a, b) => (a.name||"").localeCompare(b.name||""));
     sorted.forEach(c => {
       if (!c.name) return;
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = c.name;
       dl.appendChild(opt);
     });
   }
 
   function findContactByName(name) {
-    const n = name.trim().toLowerCase();
+    const n = (name || "").trim().toLowerCase();
     if (!n) return null;
-    return phonebook.find(c => (c.name||'').trim().toLowerCase() === n) || null;
+    return phonebook.find(c => (c.name||"").trim().toLowerCase() === n) || null;
   }
 
   function syncPhoneMarkForRow(row) {
-    const nameInput  = row.querySelector('.name-input');
-    const phoneInput = row.querySelector('.phone-input');
+    const nameInput  = row.querySelector(".name-input");
+    const phoneInput = row.querySelector(".phone-input");
 
-    const nameVal  = nameInput ? (nameInput.value || '') : '';
-    const phoneVal = phoneInput ? (phoneInput.value || '') : '';
+    const nameVal  = nameInput ? (nameInput.value || "") : "";
+    const phoneVal = phoneInput ? (phoneInput.value || "") : "";
 
     const contact = findContactByName(nameVal);
-    const numberFromContact = contact && contact.phone ? contact.phone.trim() : '';
+    const numberFromContact = contact && contact.phone ? contact.phone.trim() : "";
 
-    // Auto-populate phone only if empty (keeps manual overrides)
     if (numberFromContact && phoneInput && !phoneVal.trim()) {
       phoneInput.value = numberFromContact;
       const teamSlug = row.dataset.team;
@@ -1109,106 +1668,94 @@ function refreshPhonebookDatalist() {
   }
 
   function updateAllPhoneMarks() {
-    document.querySelectorAll('.shift-row').forEach(r => syncPhoneMarkForRow(r));
+    document.querySelectorAll(".shift-row").forEach(r => syncPhoneMarkForRow(r));
   }
 
   /* ===== Rendering duty board ===== */
   function renderTeams() {
-    const momGrid = document.getElementById('grid-mom');
-    const stGrid  = document.getElementById('grid-st');
-    const oleGrid = document.getElementById('grid-ole');
+    const momGrid = document.getElementById("grid-mom");
+    const stGrid  = document.getElementById("grid-st");
+    const oleGrid = document.getElementById("grid-ole");
 
-    momGrid.innerHTML = '';
-    stGrid.innerHTML  = '';
-    oleGrid.innerHTML = '';
+    momGrid.innerHTML = "";
+    stGrid.innerHTML  = "";
+    oleGrid.innerHTML = "";
 
     teams.forEach(team => {
       const slug = slugify(team.name);
-      const card = document.createElement('div');
-      card.className = 'team-card';
+      const card = document.createElement("div");
+      card.className = "team-card";
       card.dataset.teamSlug = slug;
       card.dataset.teamName = team.name;
       card.dataset.category = team.category;
 
-      const roleTag = team.category === 'MOM'
-        ? 'MOM'
-        : (team.category === 'OLE' ? 'OLE Fault Team' : 'S&T Fault Team');
+      const roleTag = team.category === "MOM"
+        ? "MOM"
+        : (team.category === "OLE" ? "OLE Fault Team" : "S&T Fault Team");
 
       const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
-const savedMode = localStorage.getItem(modeKey) || '12h';
+      const savedMode = localStorage.getItem(modeKey) || "12h";
 
-const headerHtml = `
-  <div class="team-header">
-    <div>
-      <div class="team-title">${team.name}</div>
-    </div>
-    <div class="team-meta">
-      <div style="display:flex; gap:0.5rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
-        <span class="team-tag">${roleTag}</span>
-        <label class="muted" style="font-size:0.75rem;">Shift format</label>
-        <select class="mode-select" data-team="${slug}">
-          <option value="12h" ${savedMode==='12h'?'selected':''}>12h (Day/Night)</option>
-          <option value="8h"  ${savedMode==='8h'?'selected':''}>8h (E/A/N)</option>
-        </select>
-      </div>
-    </div>
-  </div>
-`;
+      const headerHtml = `
+        <div class="team-header">
+          <div>
+            <div class="team-title">${team.name}</div>
+          </div>
+          <div class="team-meta">
+            <div style="display:flex; gap:0.5rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+              <span class="team-tag">${roleTag}</span>
+              <label class="muted" style="font-size:0.75rem;">Shift format</label>
+              <select class="mode-select" data-team="${slug}">
+                <option value="12h" ${savedMode==="12h"?"selected":""}>12h (Day/Night)</option>
+                <option value="8h"  ${savedMode==="8h"?"selected":""}>8h (E/A/N)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
 
       const shiftsForCard = [];
-const modeKey2 = `${STORAGE_PREFIX}mode_${slug}`;
-const mode = localStorage.getItem(modeKey2) || '12h';
+      const mode = localStorage.getItem(modeKey) || "12h";
 
-if (mode === '8h') {
-  shiftsForCard.push(
-    { label: 'Early Turn', time: '06:00-14:00' },
-    { label: 'Afternoon Turn', time: '14:00-22:00' },
-    { label: 'Night Turn', time: '22:00-06:00' },
-    { label: 'Additional', time: '' }
-  );
-} else {
-  shiftsForCard.push(
-    { label: 'Day Shift', time: '06:00-18:00' },
-    { label: 'Night Shift', time: '18:00-06:00' },
-    { label: 'Additional', time: '' }
-  );
-}
+      if (mode === "8h") {
+        shiftsForCard.push(
+          { label: "Early Turn", time: "06:00-14:00" },
+          { label: "Afternoon Turn", time: "14:00-22:00" },
+          { label: "Night Turn", time: "22:00-06:00" },
+          { label: "Additional", time: "" }
+        );
+      } else {
+        shiftsForCard.push(
+          { label: "Day Shift", time: "06:00-18:00" },
+          { label: "Night Shift", time: "18:00-06:00" },
+          { label: "Additional", time: "" }
+        );
+      }
 
-      let rowsHtml = '';
+      let rowsHtml = "";
       shiftsForCard.forEach((shift, index) => {
         const nameKey  = storageKeyName(slug, index);
         const timeKey  = storageKeyTime(slug, index);
         const phoneKey = storageKeyPhone(slug, index);
 
-        const savedName  = localStorage.getItem(nameKey) || '';
-        const savedTime  = (localStorage.getItem(timeKey) || shift.time || '').replace(/"/g, '&quot;');
-        const savedPhone = (localStorage.getItem(phoneKey) || '').replace(/"/g, '&quot;');
-        const labelSafe  = shift.label.replace(/"/g, '&quot;');
+        const savedName  = localStorage.getItem(nameKey) || "";
+        const savedTime  = (localStorage.getItem(timeKey) || shift.time || "").replace(/"/g, "&quot;");
+        const savedPhone = (localStorage.getItem(phoneKey) || "").replace(/"/g, "&quot;");
+        const labelSafe  = shift.label.replace(/"/g, "&quot;");
 
         rowsHtml += `
-          <tr class="shift-row"
-              data-team="${slug}"
-              data-index="${index}"
-              data-label="${labelSafe}">
+          <tr class="shift-row" data-team="${slug}" data-index="${index}" data-label="${labelSafe}">
             <td class="shift-label">${shift.label}</td>
             <td class="shift-time">
               <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}">
             </td>
             <td>
               <div class="name-cell">
-                <input type="text"
-                       class="name-input"
-                       placeholder="Name on duty"
-                       list="phonebookNames"
-                       value="${savedName.replace(/"/g, '&quot;')}">
-                
+                <input type="text" class="name-input" placeholder="Name on duty" list="phonebookNames" value="${savedName.replace(/"/g, "&quot;")}">
               </div>
             </td>
             <td>
-              <input type="text"
-                     class="phone-input"
-                     placeholder="Phone"
-                     value="${savedPhone}">
+              <input type="text" class="phone-input" placeholder="Phone" value="${savedPhone}">
             </td>
           </tr>
         `;
@@ -1217,320 +1764,877 @@ if (mode === '8h') {
       const tableHtml = `
         <table class="shift-table">
           <thead>
-          <tr>
-            <th>Shift</th>
-            <th>Time</th>
-            <th>Name</th>
-            <th>Phone</th>
-          </tr>
+            <tr><th>Shift</th><th>Time</th><th>Name</th><th>Phone</th></tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       `;
 
       const jobKey   = storageKeyJob(slug);
-      const savedJob = localStorage.getItem(jobKey) || '';
+      const savedJob = localStorage.getItem(jobKey) || "";
 
       const jobHtml = `
         <div class="job-card">
           <div class="job-card-label">Job card / handover notes</div>
-          <textarea placeholder="What to remind this team when they book on…">${savedJob}</textarea>
+          <textarea class="job-notes" placeholder="What to remind this team when they book on…">${savedJob}</textarea>
         </div>
       `;
 
       const footerHtml = `
         <div class="card-footer">
-          <div>
-            <span class="status-dot"></span>
-            <span class="status-label">No active shift</span>
-          </div>
+          <div><span class="status-dot"></span><span class="status-label">No active shift</span></div>
           <div class="updated-label"></div>
         </div>
       `;
 
       card.innerHTML = headerHtml + tableHtml + jobHtml + footerHtml;
 
-      
+      const modeSelect = card.querySelector(".mode-select");
+      if (modeSelect) {
+        modeSelect.addEventListener("change", () => {
+          localStorage.setItem(`${STORAGE_PREFIX}mode_${slug}`, modeSelect.value);
+          renderTeams();
+          updateOnDutyHighlighting();
+          updateOnDutySummary();
+          queueSnapshot("change");
+        });
+      }
 
-      const modeSelect = card.querySelector('.mode-select');
-if (modeSelect) {
-  modeSelect.addEventListener('change', () => {
-    localStorage.setItem(`${STORAGE_PREFIX}mode_${slug}`, modeSelect.value);
-    renderTeams();
-    updateOnDutyHighlighting();
-    updateOnDutySummary();
-    queueSnapshot("change");
-  });
-}
-if (team.category === 'MOM') momGrid.appendChild(card);
-      else if (team.category === 'OLE') oleGrid.appendChild(card);
+      if (team.category === "MOM") momGrid.appendChild(card);
+      else if (team.category === "OLE") oleGrid.appendChild(card);
       else stGrid.appendChild(card);
 
-      const rows = card.querySelectorAll('.shift-row');
+      const rows = card.querySelectorAll(".shift-row");
       rows.forEach((row, index) => {
-        const nameInput  = row.querySelector('.name-input');
-        const timeInput  = row.querySelector('.time-input');
-        const phoneInput = row.querySelector('.phone-input');
+        const nameInput  = row.querySelector(".name-input");
+        const timeInput  = row.querySelector(".time-input");
+        const phoneInput = row.querySelector(".phone-input");
 
         const nameKey  = storageKeyName(slug, index);
         const timeKey  = storageKeyTime(slug, index);
         const phoneKey = storageKeyPhone(slug, index);
 
         if (nameInput) {
-          nameInput.addEventListener('input', () => {
+          nameInput.addEventListener("input", () => {
             localStorage.setItem(nameKey, nameInput.value.trim());
             touchUpdated(card);
             updateOnDutySummary();
             syncPhoneMarkForRow(row);
+            queueSnapshot("edit");
           });
-          nameInput.addEventListener('change', () => syncPhoneMarkForRow(row));
+          nameInput.addEventListener("change", () => syncPhoneMarkForRow(row));
         }
 
         if (timeInput) {
-          timeInput.addEventListener('input', () => {
+          timeInput.addEventListener("input", () => {
             localStorage.setItem(timeKey, timeInput.value.trim());
             touchUpdated(card);
             updateOnDutyHighlighting();
             updateOnDutySummary();
+            queueSnapshot("edit");
           });
         }
 
         if (phoneInput) {
-          phoneInput.addEventListener('input', () => {
+          phoneInput.addEventListener("input", () => {
             localStorage.setItem(phoneKey, phoneInput.value.trim());
             touchUpdated(card);
             syncPhoneMarkForRow(row);
+            queueSnapshot("edit");
           });
         }
 
         syncPhoneMarkForRow(row);
       });
 
-      const jobTextarea = card.querySelector('.job-card textarea');
+      const jobTextarea = card.querySelector(".job-notes");
       if (jobTextarea) {
-        jobTextarea.addEventListener('input', () => {
+        jobTextarea.addEventListener("input", () => {
           localStorage.setItem(jobKey, jobTextarea.value);
           touchUpdated(card);
+          queueSnapshot("edit");
         });
       }
     });
   }
 
   function touchUpdated(card) {
-    const label = card.querySelector('.updated-label');
+    const label = card.querySelector(".updated-label");
     if (!label) return;
     label.textContent = `Last updated ${formatNowString()}`;
   }
 
   function refreshClock() {
-    const nowLabel = document.getElementById('nowLabel');
+    const nowLabel = document.getElementById("nowLabel");
     if (nowLabel) nowLabel.textContent = formatNowString();
   }
 
   function updateOnDutyHighlighting() {
     const nowMinutes = getNowMinutes();
-    const cards = Array.from(document.querySelectorAll('.team-card'));
+    const cards = Array.from(document.querySelectorAll(".team-card"));
 
     cards.forEach(card => {
-      const rows = Array.from(card.querySelectorAll('.shift-row'));
+      const rows = Array.from(card.querySelectorAll(".shift-row"));
       let cardOnDuty = false;
       let cardMissingName = false;
 
       rows.forEach(row => {
-        row.classList.remove('on-duty-row', 'missing-name-row');
-        const timeInput = row.querySelector('.time-input');
-        const timeStr   = timeInput ? timeInput.value : '';
+        row.classList.remove("on-duty-row", "missing-name-row");
+        const timeInput = row.querySelector(".time-input");
+        const timeStr   = timeInput ? timeInput.value : "";
         const range     = parseRange(timeStr);
         if (!range) return;
         const inRange = isNowInRange(range, nowMinutes);
         if (inRange) {
-          const nameInput = row.querySelector('.name-input');
+          const nameInput = row.querySelector(".name-input");
           const nameEmpty = !nameInput || !nameInput.value.trim();
-          row.classList.add('on-duty-row');
+          row.classList.add("on-duty-row");
           if (nameEmpty) {
-            row.classList.add('missing-name-row');
+            row.classList.add("missing-name-row");
             cardMissingName = true;
           }
           cardOnDuty = true;
         }
       });
 
-      card.classList.toggle('on-duty-card', cardOnDuty);
-      card.classList.toggle('missing-name-card', cardOnDuty && cardMissingName);
+      card.classList.toggle("on-duty-card", cardOnDuty);
+      card.classList.toggle("missing-name-card", cardOnDuty && cardMissingName);
 
-      const footer = card.querySelector('.card-footer');
+      const footer = card.querySelector(".card-footer");
       if (footer) {
-        footer.classList.toggle('on-duty-footer', cardOnDuty);
-        footer.classList.toggle('missing-name-footer', cardOnDuty && cardMissingName);
-        const label = footer.querySelector('.status-label');
+        footer.classList.toggle("on-duty-footer", cardOnDuty);
+        footer.classList.toggle("missing-name-footer", cardOnDuty && cardMissingName);
+        const label = footer.querySelector(".status-label");
         if (label) {
-          if (!cardOnDuty) label.textContent = 'No active shift';
-          else if (cardMissingName) label.textContent = 'Shift active but no name booked on';
-          else label.textContent = 'Shift active';
+          if (!cardOnDuty) label.textContent = "No active shift";
+          else if (cardMissingName) label.textContent = "Shift active but no name booked on";
+          else label.textContent = "Shift active";
         }
       }
     });
   }
 
   function updateOnDutySummary() {
-    const container = document.getElementById('onDutySummary');
+    const container = document.getElementById("onDutySummary");
     if (!container) return;
 
-    const summaryText = document.getElementById('summaryText');
-
-    const rows = Array.from(document.querySelectorAll('.shift-row.on-duty-row'));
+    const summaryText = document.getElementById("summaryText");
+    const rows = Array.from(document.querySelectorAll(".shift-row.on-duty-row"));
     const active = [];
 
     rows.forEach(row => {
-      const teamCard = row.closest('.team-card');
+      const teamCard = row.closest(".team-card");
       if (!teamCard) return;
-      const teamName = teamCard.dataset.teamName || '';
-      const label    = row.dataset.label || '';
-      const timeInput= row.querySelector('.time-input');
-      const timeStr  = timeInput ? timeInput.value || '' : '';
-      const nameInput= row.querySelector('.name-input');
-      const name     = nameInput ? nameInput.value.trim() : '';
-      const category = teamCard.dataset.category || '';
-      const role     = category === 'MOM' ? 'MOM' : (category === 'OLE' ? 'OLE' : 'S&T');
+      const teamName = teamCard.dataset.teamName || "";
+      const label    = row.dataset.label || "";
+      const timeInput= row.querySelector(".time-input");
+      const timeStr  = timeInput ? timeInput.value || "" : "";
+      const nameInput= row.querySelector(".name-input");
+      const name     = nameInput ? nameInput.value.trim() : "";
+      const category = teamCard.dataset.category || "";
+      const role     = category === "MOM" ? "MOM" : (category === "OLE" ? "OLE" : "S&T");
       active.push({ teamName, label, time: timeStr, name, role });
     });
 
     if (summaryText) {
       summaryText.textContent = active.length
         ? `${active.length} active shifts based on the current timetable.`
-        : `No active shifts found based on the current timetable.`;
+        : "No active shifts found based on the current timetable.";
     }
 
     if (!active.length) {
       container.innerHTML = `
-        <div class="on-duty-summary-title">On duty snapshot</div>
-        <div class="on-duty-empty-message">
-          No active shifts found right now based on current time &amp; shift times.
-        </div>
+        <div style="font-size:0.85rem; font-weight:750; text-transform:uppercase; letter-spacing:0.08em; color:#4b5563; margin-bottom:0.5rem;">On duty snapshot</div>
+        <div style="font-size:0.85rem; color:#6b7280;">No active shifts found right now based on current time &amp; shift times.</div>
       `;
       return;
     }
 
-    const groups = { MOM: [], 'S&T': [], OLE: [] };
+    const groups = { MOM: [], "S&T": [], OLE: [] };
     active.forEach(item => {
       const key = item.role;
       if (!groups[key]) groups[key] = [];
       groups[key].push(item);
     });
 
-    ['MOM', 'S&T', 'OLE'].forEach(k => groups[k].sort((a, b) => a.teamName.localeCompare(b.teamName)));
+    ["MOM", "S&T", "OLE"].forEach(k => groups[k].sort((a, b) => a.teamName.localeCompare(b.teamName)));
 
-    let html = `<div class="on-duty-summary-title">On duty snapshot</div><div class="on-duty-groups">`;
+    let html = `<div style="font-size:0.85rem; font-weight:750; text-transform:uppercase; letter-spacing:0.08em; color:#4b5563; margin-bottom:0.5rem;">On duty snapshot</div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:0.75rem;">`;
+
     Object.entries(groups).forEach(([role, items]) => {
       if (!items.length) return;
-      html += `<div class="on-duty-group">
-        <div class="on-duty-group-title">${role} teams</div>
-        <div class="on-duty-group-body">
-      `;
+      html += `<div style="background:#f9fafb; border-radius:0.75rem; border:1px solid #e5e7eb; padding:0.6rem;">
+        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:0.4rem;">${role} teams</div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">`;
       items.forEach(item => {
         const missing = !item.name;
         html += `
-          <span class="on-duty-pill ${missing ? 'on-duty-missing' : 'on-duty-active'}">
-            <span>●</span>
+          <span style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.55rem; border-radius:999px; border:1px solid ${missing ? "#fecaca" : "#bbf7d0"}; background:${missing ? "#fef2f2" : "#ecfdf5"}; font-size:0.75rem; max-width:100%; white-space:normal;">
+            <span style="color:${missing ? "#b91c1c" : "#047857"};">●</span>
             <span><strong>${item.teamName}</strong></span>
-            <span class="role">${item.label}</span>
-            <span>${item.time || ''}</span>
-            <span class="${missing ? 'name-empty' : ''}">
-              ${missing ? '(no name booked on)' : item.name}
-            </span>
+            <span style="color:#6b7280;">${item.label}</span>
+            <span>${item.time || ""}</span>
+            <span style="color:${missing ? "#b91c1c" : "#111827"};">${missing ? "(no name booked on)" : item.name}</span>
           </span>
         `;
       });
       html += `</div></div>`;
     });
+
     html += `</div>`;
     container.innerHTML = html;
   }
 
+  /* ===========================
+     MAINTENANCE CRITICAL COMPETENCY (NEW)
+     =========================== */
+
+  const MCC = {
+    areas: ["Bedford", "Leicester", "Derby", "Lincoln"],
+    baseSections: ["Track", "S&T", "OLE", "D&P"],
+    extraSectionsByArea: {
+      "Leicester": ["Off Track & Drainage"],
+      "Lincoln": ["Off Track & Drainage"]
+    },
+    keyPrefix: "mcc_v1_",
+    wipeKey: "mcc_v1_last_wipe_date",
+    openArea: null
+  };
+
+
+  function mccSectionsFor(area){
+    const base = MCC.baseSections.slice();
+    const extra = (MCC.extraSectionsByArea && MCC.extraSectionsByArea[area]) ? MCC.extraSectionsByArea[area] : [];
+    return base.concat(extra);
+  }
+
+
+
+  function mccMissingOptions(area, section){
+    const sec = (section || "").toLowerCase();
+    // Map by discipline (order matters: "off track" contains "track")
+    if (sec.includes("off track") || sec.includes("drainage")) return ["Chainsaws","Polesaws"];
+    if (sec.includes("track")) return ["TR11","TR12","COSS"];
+    if (sec.includes("s&t") || sec.includes("s_t") || sec.includes("s&t")) {
+      const base = ["SMTH","SFI"];
+      // Leicester only extras
+      if ((area || "").toLowerCase() === "leicester") base.push("LXings","Mech Signalling");
+      return base;
+    }
+    if (sec.includes("ole")) return ["Nominated Person","COSS"];
+    if (sec.includes("d&p") || sec.includes("d_p") || sec.includes("dp")) return ["Level A","Plant28 (Switch Sig Power)","COSS"];
+    return [];
+  }
+
+  function mccLoadMissing(area, section){
+    try {
+      const raw = localStorage.getItem(mccKeyMissing(area, section));
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(Boolean) : [];
+    } catch(e){
+      return [];
+    }
+  }
+  const mccKey = (area, part) => `${MCC.keyPrefix}${area.toLowerCase()}_${part}`;
+  const mccKeyStatus = (area, section) => mccKey(area, `status_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
+  const mccKeyMit    = (area, section) => mccKey(area, `mit_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
+  const mccKeyMissing= (area, section) => mccKey(area, `missing_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
+  const mccKeyWorks  = (area)          => mccKey(area, "critical_works");
+  const mccKeyUpdated= (area)          => mccKey(area, "last_updated");
+  const mccKeyOvOn   = (area)          => mccKey(area, "override_on");
+  const mccKeyOvRag  = (area)          => mccKey(area, "override_rag");
+  const mccKeyOvWhy  = (area)          => mccKey(area, "override_reason");
+  const mccCmdKey    = (area, part)     => mccKey(area, `cmd_${part}`);
+
+  function normaliseRag(val){
+    const v = (val || "").toLowerCase();
+    if (v === "green" || v === "amber" || v === "red" || v === "unknown") return v;
+    return "unknown";
+  }
+
+  function ragLabel(rag){
+    if (rag === "green") return "Full coverage";
+    if (rag === "amber") return "Cross-cover / backfill";
+    if (rag === "red") return "No mitigation";
+    return "Not updated";
+  }
+
+  function ragSeverity(rag){
+    if (rag === "red") return 3;
+    if (rag === "amber") return 2;
+    if (rag === "green") return 1;
+    return 0; // unknown/grey
+  }
+
+  function computeAreaRag(area){
+    const ovOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
+    if (ovOn){
+      const ov = normaliseRag(localStorage.getItem(mccKeyOvRag(area)));
+      if (ov === "amber" || ov === "red") return ov;
+    }
+    let worst = "unknown";
+    mccSectionsFor(area).forEach(sec => {
+      const r = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
+      if (ragSeverity(r) > ragSeverity(worst)) worst = r;
+    });
+    return worst;
+  }
+
+  function dotClass(rag){
+    if (rag === "green") return "green";
+    if (rag === "amber") return "amber";
+    if (rag === "red") return "red";
+    return "grey";
+  }
+
+  function tileClass(rag){
+    if (rag === "green") return "rag-green";
+    if (rag === "amber") return "rag-amber";
+    if (rag === "red") return "rag-red";
+    return "rag-grey";
+  }
+
+  function fmtTime(ts){
+    if (!ts) return "";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "";
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
+  }
+
+  function touchMCCUpdated(area){
+    localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+  }
+
+  function mitigationSnippet(text){
+    const t = (text || "").trim();
+    if (!t) return "";
+    if (t.length <= 70) return t;
+    return t.slice(0, 70).trim() + "…";
+  }
+
+  function renderMCCTiles(){
+    const grid = document.getElementById("mccGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    MCC.areas.forEach(area => {
+      const overall = computeAreaRag(area);
+
+      const tile = document.createElement("div");
+      tile.className = `mcc-tile ${tileClass(overall)}`;
+      tile.dataset.area = area;
+
+      // lines
+      const lines = document.createElement("div");
+      lines.className = "mcc-lines";
+
+      mccSectionsFor(area).forEach(sec => {
+        const rag = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
+        const mit = (localStorage.getItem(mccKeyMit(area, sec)) || "").trim();
+        const miss = mccLoadMissing(area, sec);
+
+        const line = document.createElement("div");
+        line.className = "mcc-line";
+
+        const dot = document.createElement("span");
+        dot.className = `rag-dot ${dotClass(rag)}`;
+        dot.title = ragLabel(rag);
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = sec;
+
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.textContent = ragLabel(rag);
+
+        const mitDiv = document.createElement("div");
+        mitDiv.className = "mit";
+        if (rag !== "green" && rag !== "unknown") {
+          const parts = [];
+          if (miss && miss.length) parts.push(miss.join(", "));
+          if (mit) parts.push(mitigationSnippet(mit));
+          mitDiv.textContent = parts.join(" – ");
+        } else {
+          mitDiv.textContent = "";
+        }
+
+        line.appendChild(dot);
+        line.appendChild(label);
+        line.appendChild(msg);
+        line.appendChild(mitDiv);
+        lines.appendChild(line);
+      });
+
+      const works = document.createElement("div");
+      works.className = "mcc-works";
+      works.innerHTML = `
+        <div class="label">Critical works</div>
+        <textarea placeholder="What’s biting today? (critical works, constraints, access...)"></textarea>
+      `;
+
+      const worksTa = works.querySelector("textarea");
+      worksTa.value = localStorage.getItem(mccKeyWorks(area)) || "";
+      worksTa.addEventListener("input", () => {
+        localStorage.setItem(mccKeyWorks(area), worksTa.value);
+        touchMCCUpdated(area);
+        queueSnapshot("mcc_edit");
+      });
+
+      const head = document.createElement("div");
+      head.className = "mcc-head";
+      const updated = fmtTime(localStorage.getItem(mccKeyUpdated(area)));
+      const ovOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
+      head.innerHTML = `
+        <div class="mcc-title">
+          ${area}
+          ${ovOn ? `<span class="mcc-badge">Declared</span>` : ``}
+          ${updated ? `<span class="mcc-updated">Updated ${updated}</span>` : `<span class="mcc-updated">Not updated</span>`}
+        </div>
+        <div class="mcc-status">
+          <span>Status</span>
+          <span class="rag-dot ${dotClass(overall)}" title="${ragLabel(overall)}"></span>
+        </div>
+      `;
+
+      const plus = document.createElement("button");
+      plus.className = "mcc-plus";
+      plus.title = "Update competency status";
+      plus.textContent = "+";
+      plus.addEventListener("click", () => openMCCModal(area));
+
+      tile.appendChild(head);
+      tile.appendChild(lines);
+      tile.appendChild(works);
+      tile.appendChild(plus);
+
+      grid.appendChild(tile);
+    });
+  }
+
+  function openMCCModal(area){
+    MCC.openArea = area;
+    const backdrop = document.getElementById("mccModalBackdrop");
+    const title = document.getElementById("mccModalTitle");
+    const sub = document.getElementById("mccModalSub");
+    const grid = document.getElementById("mccFormGrid");
+    const worksTa = document.getElementById("mccCriticalWorksModal");
+    const pill = document.getElementById("mccModalStatusPill");
+
+    if (!backdrop || !title || !sub || !grid || !worksTa || !pill) return;
+
+    title.textContent = `${area} – competency settings`;
+    sub.textContent = "Set coverage state per section. Amber/Red requires mitigation text (because reality doesn’t fix itself).";
+
+
+    // Override controls
+    const ovWrap = document.getElementById("mccOverrideWrap");
+    const ovChk  = document.getElementById("mccOverrideOn");
+    const ovSel  = document.getElementById("mccOverrideRag");
+    const ovWhy  = document.getElementById("mccOverrideReason");
+    if (ovWrap && ovChk && ovSel && ovWhy){
+      const isOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
+      const rag  = normaliseRag(localStorage.getItem(mccKeyOvRag(area)));
+      const why  = localStorage.getItem(mccKeyOvWhy(area)) || "";
+      ovChk.checked = isOn;
+      ovSel.value = (rag === "amber" || rag === "red") ? rag : "amber";
+      ovWhy.value = why;
+      const applyVis = () => {
+        ovWrap.classList.toggle("on", ovChk.checked);
+        // keep pill in sync
+        updateModalPill(area, grid, worksTa, pill);
+      };
+      applyVis();
+      ovChk.onchange = applyVis;
+      ovSel.onchange = () => updateModalPill(area, grid, worksTa, pill);
+      ovWhy.oninput = () => updateModalPill(area, grid, worksTa, pill);
+    }
+
+
+    // Build form cards
+    grid.innerHTML = "";
+    mccSectionsFor(area).forEach(sec => {
+      const current = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
+      const mit = (localStorage.getItem(mccKeyMit(area, sec)) || "").trim();
+
+      const card = document.createElement("div");
+      card.className = "mcc-form-card";
+      card.dataset.section = sec;
+
+      const dot = document.createElement("span");
+      dot.className = `rag-dot ${dotClass(current)}`;
+
+      const select = document.createElement("select");
+      select.className = "mcc-select";
+      select.innerHTML = `
+        <option value="unknown">Not updated (grey)</option>
+        <option value="green">Full coverage (green)</option>
+        <option value="amber">Missing competency / cover with cross-cover available (amber)</option>
+        <option value="red">Missing competency / cover with NO mitigation available (red)</option>
+      `;
+      select.value = current;
+
+      const mitWrap = document.createElement("div");
+      mitWrap.className = "mcc-mit";
+      mitWrap.innerHTML = `
+        <label>Missing competencies</label>
+        <div class="mcc-chips" aria-label="Missing competencies"></div>
+        <label>Mitigation / cover detail</label>
+        <textarea placeholder="Who is covering? What’s the workaround? Anything to brief ops with?"></textarea>
+      `;
+      const mitTa = mitWrap.querySelector("textarea");
+      mitTa.value = mit;
+      const chipsWrap = mitWrap.querySelector(".mcc-chips");
+      const opts = mccMissingOptions(area, sec);
+      const savedMissing = mccLoadMissing(area, sec);
+      if (chipsWrap && opts.length){
+        chipsWrap.innerHTML = "";
+        opts.forEach(opt => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "mcc-chip";
+          b.textContent = opt;
+          if (savedMissing.includes(opt)) b.classList.add("on");
+          b.addEventListener("click", () => {
+            b.classList.toggle("on");
+            updateModalPill(area, grid, worksTa, pill);
+          });
+          chipsWrap.appendChild(b);
+        });
+      } else if (chipsWrap) {
+        chipsWrap.innerHTML = `<div class="mcc-chip-empty">No options</div>`;
+      }
+
+
+      // show/hide mitigation
+      const applyMitVis = () => {
+        const v = normaliseRag(select.value);
+        dot.className = `rag-dot ${dotClass(v)}`;
+        if (v === "amber" || v === "red") mitWrap.style.display = "flex";
+        else mitWrap.style.display = "none";
+        updateModalPill(area, grid, worksTa, pill);
+      };
+      applyMitVis();
+
+      select.addEventListener("change", applyMitVis);
+      mitTa.addEventListener("input", () => updateModalPill(area, grid, worksTa, pill));
+
+      const top = document.createElement("div");
+      top.className = "top";
+      top.appendChild(document.createElement("div"));
+
+      const name = document.createElement("div");
+      name.className = "name";
+      name.appendChild(dot);
+      const label = document.createElement("span");
+      label.textContent = sec;
+      name.appendChild(label);
+
+      const topWrap = document.createElement("div");
+      topWrap.className = "top";
+      topWrap.appendChild(name);
+      topWrap.appendChild(select);
+
+      card.appendChild(topWrap);
+      card.appendChild(mitWrap);
+      grid.appendChild(card);
+    });
+
+    worksTa.value = localStorage.getItem(mccKeyWorks(area)) || "";
+    worksTa.addEventListener("input", () => updateModalPill(area, grid, worksTa, pill), { once: true });
+
+    updateModalPill(area, grid, worksTa, pill);
+
+    backdrop.style.display = "flex";
+    backdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function updateModalPill(area, grid, worksTa, pill){
+    // compute worst from current modal selections
+    let worst = "unknown";
+    const cards = Array.from(grid.querySelectorAll(".mcc-form-card"));
+    cards.forEach(c => {
+      const sel = c.querySelector(".mcc-select");
+      const v = sel ? normaliseRag(sel.value) : "unknown";
+      if (ragSeverity(v) > ragSeverity(worst)) worst = v;
+    });
+
+    // override preview
+    const ovChk = document.getElementById("mccOverrideOn");
+    const ovSel = document.getElementById("mccOverrideRag");
+    const ovOn  = !!(ovChk && ovChk.checked);
+    if (ovOn){
+      const ov = normaliseRag(ovSel ? ovSel.value : "amber");
+      worst = (ov === "red") ? "red" : "amber";
+    }
+
+    pill.innerHTML = `<span class="rag-dot ${dotClass(worst)}"></span><span>${ovOn ? (ragLabel(worst) + " (Declared)") : ragLabel(worst)}</span>`;
+  }
+
+  function closeMCCModal(){
+    const backdrop = document.getElementById("mccModalBackdrop");
+    if (!backdrop) return;
+    backdrop.style.display = "none";
+    backdrop.setAttribute("aria-hidden", "true");
+    MCC.openArea = null;
+  }
+
+  function saveMCCModal(){
+    const area = MCC.openArea;
+    if (!area) return;
+
+    const grid = document.getElementById("mccFormGrid");
+    const worksTa = document.getElementById("mccCriticalWorksModal");
+    if (!grid || !worksTa) return;
+
+    // Override
+    const ovChk = document.getElementById("mccOverrideOn");
+    const ovSel = document.getElementById("mccOverrideRag");
+    const ovWhy = document.getElementById("mccOverrideReason");
+    const ovOn  = !!(ovChk && ovChk.checked);
+    if (ovOn){
+      const rag = normaliseRag(ovSel ? ovSel.value : "amber");
+      const why = (ovWhy ? (ovWhy.value || "").trim() : "");
+      localStorage.setItem(mccKeyOvOn(area), "1");
+      localStorage.setItem(mccKeyOvRag(area), (rag === "red" ? "red" : "amber"));
+      localStorage.setItem(mccKeyOvWhy(area), why);
+    } else {
+      localStorage.setItem(mccKeyOvOn(area), "0");
+      localStorage.removeItem(mccKeyOvRag(area));
+      localStorage.removeItem(mccKeyOvWhy(area));
+    }
+
+    const cards = Array.from(grid.querySelectorAll(".mcc-form-card"));
+    cards.forEach(card => {
+      const sec = card.dataset.section;
+      const sel = card.querySelector(".mcc-select");
+      const mit = card.querySelector(".mcc-mit textarea");
+
+      const rag = sel ? normaliseRag(sel.value) : "unknown";
+      const mitText = mit ? (mit.value || "").trim() : "";
+      const miss = Array.from(card.querySelectorAll(".mcc-chip.on")).map(b => (b.textContent || "").trim()).filter(Boolean);
+
+      localStorage.setItem(mccKeyStatus(area, sec), rag);
+
+      // only keep mitigation/missing if amber/red, otherwise wipe it
+      if (rag === "amber" || rag === "red") {
+        localStorage.setItem(mccKeyMit(area, sec), mitText);
+        if (miss.length) localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(miss));
+        else localStorage.removeItem(mccKeyMissing(area, sec));
+      } else {
+        localStorage.removeItem(mccKeyMit(area, sec));
+        localStorage.removeItem(mccKeyMissing(area, sec));
+      }
+    });
+
+    localStorage.setItem(mccKeyWorks(area), worksTa.value || "");
+    touchMCCUpdated(area);
+
+    renderMCCTiles();
+      renderMCCCommand();
+    renderMCCCommand();
+    queueSnapshot("mcc_save");
+    closeMCCModal();
+  }
+
+  function resetMCCTile(area){
+    mccSectionsFor(area).forEach(sec => {
+      localStorage.removeItem(mccKeyStatus(area, sec));
+      localStorage.removeItem(mccKeyMit(area, sec));
+      localStorage.removeItem(mccKeyMissing(area, sec));
+    });
+    localStorage.removeItem(mccKeyWorks(area));
+    localStorage.removeItem(mccKeyUpdated(area));
+    localStorage.removeItem(mccKeyOvRag(area));
+    localStorage.removeItem(mccKeyOvWhy(area));
+    localStorage.setItem(mccKeyOvOn(area), "0");
+    localStorage.removeItem(mccCmdKey(area,"data"));
+  }
+
+  function resetOpenMCCTile(){
+    const area = MCC.openArea;
+    if (!area) return;
+
+    mccSectionsFor(area).forEach(sec => {
+      localStorage.removeItem(mccKeyStatus(area, sec));
+      localStorage.removeItem(mccKeyMit(area, sec));
+      localStorage.removeItem(mccKeyMissing(area, sec));
+    });
+    localStorage.removeItem(mccKeyWorks(area));
+    localStorage.removeItem(mccKeyUpdated(area));
+    localStorage.removeItem(mccKeyOvRag(area));
+    localStorage.removeItem(mccKeyOvWhy(area));
+    localStorage.setItem(mccKeyOvOn(area), "0");
+
+    renderMCCTiles();
+    renderMCCCommand();
+    queueSnapshot("mcc_reset");
+    closeMCCModal();
+  }
+
+  function getTodayYMD(){
+    const d = new Date();
+    const pad = n => n.toString().padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function maybeAutoWipeMCC(){
+    const now = new Date();
+    const hours = now.getHours();
+    const mins = now.getMinutes();
+    const today = getTodayYMD();
+
+    const last = localStorage.getItem(MCC.wipeKey) || "";
+
+    // Wipe once per day when local time >= 05:00
+    if (today !== last && (hours > 5 || (hours === 5 && mins >= 0))) {
+      MCC.areas.forEach(a => resetMCCTile(a));
+      localStorage.setItem(MCC.wipeKey, today);
+      renderMCCTiles();
+      renderMCCCommand();
+      queueSnapshot("mcc_autowipe");
+    }
+  }
+
+  function getMccState(){
+    const state = { version: 2, last_wipe: localStorage.getItem(MCC.wipeKey) || null, areas: {} };
+    MCC.areas.forEach(area => {
+      state.areas[area] = {
+        critical_works: localStorage.getItem(mccKeyWorks(area)) || "",
+        last_updated: localStorage.getItem(mccKeyUpdated(area)) || null,
+        override: {
+          enabled: (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1",
+          rag: normaliseRag(localStorage.getItem(mccKeyOvRag(area))),
+          reason: localStorage.getItem(mccKeyOvWhy(area)) || ""
+        },
+        command: (() => { try { return JSON.parse(localStorage.getItem(mccCmdKey(area,"data")) || "null"); } catch(e){ return null; } })(),
+        sections: {}
+      };
+      mccSectionsFor(area).forEach(sec => {
+        state.areas[area].sections[sec] = {
+          rag: normaliseRag(localStorage.getItem(mccKeyStatus(area, sec))),
+          mitigation: localStorage.getItem(mccKeyMit(area, sec)) || ""
+        };
+      });
+    });
+    return state;
+  }
+
+  function applyMccStateToLocalStorage(mccState){
+    if (!mccState || !mccState.areas) return;
+    if (mccState.last_wipe) localStorage.setItem(MCC.wipeKey, mccState.last_wipe);
+
+    MCC.areas.forEach(area => {
+      const a = mccState.areas[area];
+      if (!a) return;
+
+      if (typeof a.critical_works === "string") {
+        localStorage.setItem(mccKeyWorks(area), a.critical_works);
+      }
+
+      if (a.last_updated) localStorage.setItem(mccKeyUpdated(area), a.last_updated);
+
+      // override (optional)
+      if (a.override && typeof a.override === "object"){
+        const en = !!a.override.enabled;
+        localStorage.setItem(mccKeyOvOn(area), en ? "1" : "0");
+        const rag = normaliseRag(a.override.rag);
+        if (en) localStorage.setItem(mccKeyOvRag(area), (rag === "red" ? "red" : "amber"));
+        else localStorage.removeItem(mccKeyOvRag(area));
+        if (typeof a.override.reason === "string" && en) localStorage.setItem(mccKeyOvWhy(area), a.override.reason);
+        else localStorage.removeItem(mccKeyOvWhy(area));
+      }
+
+      // command (optional)
+      if (a.command){
+        try{ localStorage.setItem(mccCmdKey(area,"data"), JSON.stringify(a.command)); }catch(e){}
+      }
+
+      if (a.sections) {
+        mccSectionsFor(area).forEach(sec => {
+          const s = a.sections[sec];
+          if (!s) return;
+
+          const rag = normaliseRag(s.rag);
+          localStorage.setItem(mccKeyStatus(area, sec), rag);
+
+          const mit = (s.mitigation || "").toString();
+          if ((rag === "amber" || rag === "red") && mit.trim()) localStorage.setItem(mccKeyMit(area, sec), mit);
+          else localStorage.removeItem(mccKeyMit(area, sec));
+        });
+      }
+    });
+  }
+
+  /* ===========================
+     NAV + SNAPSHOT (extended to include MCC)
+     =========================== */
+
   function initNavTabs() {
-    const tabs = document.querySelectorAll('.nav-tab');
-    const viewBoard = document.getElementById('view-board');
-    const viewPhone = document.getElementById('view-phonebook');
+    const tabs = document.querySelectorAll(".nav-tab");
+    const views = {
+      duty: document.getElementById("view-duty"),
+      phonebook: document.getElementById("view-phonebook"),
+      mcc: document.getElementById("view-mcc"),
+      oncall: document.getElementById("view-oncall"),
+    };
 
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
         const view = tab.dataset.view;
-        if (view === 'board') {
-          viewBoard.classList.remove('hidden');
-          viewPhone.classList.add('hidden');
-        } else {
-          viewBoard.classList.add('hidden');
-          viewPhone.classList.remove('hidden');
+
+        Object.values(views).forEach(v => v && v.classList.add("hidden"));
+        if (views[view]) views[view].classList.remove("hidden");
+
+        // On entering MCC, ensure tiles are current
+        if (view === "mcc") {
+          maybeAutoWipeMCC();
+          renderMCCTiles();
         }
       });
     });
   }
 
-  function initPhonebookView() {
-    const addBtn     = document.getElementById('pbAddBtn');
-    const nameInput  = document.getElementById('pbName');
-    const roleInput  = document.getElementById('pbRole');
-    const phoneInput = document.getElementById('pbPhone');
-    const notesInput = document.getElementById('pbNotes');
-    const searchInput= document.getElementById('pbSearch');
-
-    addBtn.addEventListener('click', () => {
-      const name  = nameInput.value.trim();
-      const role  = roleInput.value.trim();
-      const phone = phoneInput.value.trim();
-      const notes = notesInput.value.trim();
-
-      if (!name || !phone) {
-        alert('Name and phone number are required.');
-        return;
-      }
-
-      phonebook.push({ id: nextPhonebookId(), name, role, phone, notes });
-      savePhonebook();
-      const searchVal = searchInput?.value || '';
-      refreshPhonebookTable(searchVal);
-      refreshPhonebookDatalist();
-      updateAllPhoneMarks();
-
-      nameInput.value = '';
-      roleInput.value = '';
-      phoneInput.value = '';
-      notesInput.value = '';
-      nameInput.focus();
-    });
-
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        refreshPhonebookTable(searchInput.value);
-      });
-    }
-  }
-
-  function tick() {
-    refreshClock();
-    updateOnDutyHighlighting();
-    updateOnDutySummary();
-  }
-
   // ===== Board state snapshotting to Supabase =====
   function buildBoardStateObject() {
     const state = {
-      version: 1,
+      version: 2,
       captured_at: new Date().toISOString(),
-      teams: []
+      teams: [],
+      mcc: getMccState()
     };
 
     teams.forEach(team => {
       const slug = slugify(team.name);
-      const shiftsForCard = [...team.shifts];
-      if (team.category === "MOM") shiftsForCard.push({ label: "Additional", time: "" });
+      const shiftsForCard = [];
+      const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
+      const mode = localStorage.getItem(modeKey) || "12h";
+
+      if (mode === "8h") {
+        shiftsForCard.push(
+          { label: "Early Turn", time: "06:00-14:00" },
+          { label: "Afternoon Turn", time: "14:00-22:00" },
+          { label: "Night Turn", time: "22:00-06:00" },
+          { label: "Additional", time: "" }
+        );
+      } else {
+        shiftsForCard.push(
+          { label: "Day Shift", time: "06:00-18:00" },
+          { label: "Night Shift", time: "18:00-06:00" },
+          { label: "Additional", time: "" }
+        );
+      }
 
       state.teams.push({
         name: team.name,
         category: team.category,
         slug,
+        mode,
         shifts: shiftsForCard.map((s, i) => ({
           label: s.label,
           time: localStorage.getItem(storageKeyTime(slug, i)) || s.time || "",
@@ -1547,7 +2651,6 @@ if (team.category === 'MOM') momGrid.appendChild(card);
   let snapshotTimer = null;
 
   function queueSnapshot(eventType = "change") {
-    // Debounce so we don’t hammer Supabase on every keystroke
     if (snapshotTimer) clearTimeout(snapshotTimer);
     snapshotTimer = setTimeout(() => persistBoardState(eventType), 800);
   }
@@ -1556,14 +2659,12 @@ if (team.category === 'MOM') momGrid.appendChild(card);
     try {
       const state = buildBoardStateObject();
 
-      // 1) Upsert latest state
       const { error: stateErr } = await supabaseClient
         .from("board_state")
         .upsert({ board_id: BOARD_ID, state }, { onConflict: "board_id" });
 
       if (stateErr) throw stateErr;
 
-      // 2) Insert snapshot history
       const { error: snapErr } = await supabaseClient
         .from("board_snapshots")
         .insert({ board_id: BOARD_ID, event_type: eventType, state });
@@ -1585,33 +2686,37 @@ if (team.category === 'MOM') momGrid.appendChild(card);
       if (error) throw error;
       if (!data || !data.state) return;
 
-      // Write state into localStorage keys (UI reads from those)
       const state = data.state;
-      if (!state.teams || !Array.isArray(state.teams)) return;
+      if (state.teams && Array.isArray(state.teams)) {
+        state.teams.forEach(t => {
+          const slug = t.slug || slugify(t.name || "");
+          if (t.mode) localStorage.setItem(`${STORAGE_PREFIX}mode_${slug}`, t.mode);
 
-      state.teams.forEach(t => {
-        const slug = t.slug || slugify(t.name || "");
-        const shifts = Array.isArray(t.shifts) ? t.shifts : [];
-        shifts.forEach((s, i) => {
-          localStorage.setItem(storageKeyTime(slug, i), s.time || "");
-          localStorage.setItem(storageKeyName(slug, i), s.name || "");
-          localStorage.setItem(storageKeyPhone(slug, i), s.phone || "");
+          const shifts = Array.isArray(t.shifts) ? t.shifts : [];
+          shifts.forEach((s, i) => {
+            localStorage.setItem(storageKeyTime(slug, i), s.time || "");
+            localStorage.setItem(storageKeyName(slug, i), s.name || "");
+            localStorage.setItem(storageKeyPhone(slug, i), s.phone || "");
+          });
+
+          localStorage.setItem(storageKeyJob(slug), t.job || "");
         });
-        localStorage.setItem(storageKeyJob(slug), t.job || "");
-      });
+      }
 
-      // Re-render after applying state
+      // MCC optional
+      if (state.mcc) applyMccStateToLocalStorage(state.mcc);
+
       renderTeams();
       updateOnDutyHighlighting();
       updateOnDutySummary();
       updateAllPhoneMarks();
+      renderMCCTiles();
     } catch (e) {
       console.error("Failed to load latest board state (continuing with local)", e);
     }
   }
 
   function initSnapshotHooks() {
-    // Any change to board inputs queues a snapshot.
     document.addEventListener("input", (e) => {
       const el = e.target;
       if (!(el instanceof HTMLElement)) return;
@@ -1619,89 +2724,469 @@ if (team.category === 'MOM') momGrid.appendChild(card);
         queueSnapshot("edit");
       }
     });
-
-    // Wipes and resets should snapshot too
-    document.getElementById("resetAllBtn")?.addEventListener("click", () => {
-      queueSnapshot("wipe");
-    });
   }
 
   // ===== Background refresh (poll) =====
-function isUserEditing() {
-  const el = document.activeElement;
-  if (!el) return false;
-  const tag = (el.tagName || "").toUpperCase();
-  return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
-}
-
-async function refreshFromSupabase() {
-  if (isUserEditing()) return;
-
-  try {
-    // Board state
-    const bs = await supabaseClient
-      .from("board_state")
-      .select("updated_at")
-      .eq("board_id", BOARD_ID)
-      .maybeSingle();
-
-    if (!bs.error && bs.data && bs.data.updated_at) {
-      const remoteUpdated = bs.data.updated_at;
-      if (!window.__lastAppliedBoardUpdatedAt || remoteUpdated !== window.__lastAppliedBoardUpdatedAt) {
-        await loadLatestBoardState();
-        renderTeams();
-        updateOnDutyHighlighting();
-        updateOnDutySummary();
-        window.__lastAppliedBoardUpdatedAt = remoteUpdated;
-      }
-    }
-  } catch (e) {
-    console.warn("Background refresh failed", e);
+  function isUserEditing() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = (el.tagName || "").toUpperCase();
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
   }
 
-  try {
-    // Phonebook
-    const pb = await supabaseClient
-      .from("contacts")
-      .select("updated_at")
-      .eq("board_id", BOARD_ID)
-      .order("updated_at", { ascending: false })
-      .limit(1);
+  async function refreshFromSupabase() {
+    if (isUserEditing()) return;
 
-    if (!pb.error && pb.data && pb.data.length && pb.data[0].updated_at) {
-      const remoteUpdated = pb.data[0].updated_at;
-      if (!window.__lastAppliedContactsUpdatedAt || remoteUpdated !== window.__lastAppliedContactsUpdatedAt) {
-        await loadPhonebook();
-        refreshPhonebookDatalist();
-        const searchVal = document.getElementById("pbSearch")?.value || "";
-        refreshPhonebookTable(searchVal);
-        window.__lastAppliedContactsUpdatedAt = remoteUpdated;
+    try {
+      const bs = await supabaseClient
+        .from("board_state")
+        .select("updated_at")
+        .eq("board_id", BOARD_ID)
+        .maybeSingle();
+
+      if (!bs.error && bs.data && bs.data.updated_at) {
+        const remoteUpdated = bs.data.updated_at;
+        if (!window.__lastAppliedBoardUpdatedAt || remoteUpdated !== window.__lastAppliedBoardUpdatedAt) {
+          await loadLatestBoardState();
+          window.__lastAppliedBoardUpdatedAt = remoteUpdated;
+        }
       }
+    } catch (e) {
+      console.warn("Background refresh failed", e);
     }
-  } catch (e) {
-    console.warn("Background phonebook refresh failed", e);
-  }
-}
 
-/* ===== Bootstrap ===== */
+    try {
+      const pb = await supabaseClient
+        .from("contacts")
+        .select("updated_at")
+        .eq("board_id", BOARD_ID)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (!pb.error && pb.data && pb.data.length && pb.data[0].updated_at) {
+        const remoteUpdated = pb.data[0].updated_at;
+        if (!window.__lastAppliedContactsUpdatedAt || remoteUpdated !== window.__lastAppliedContactsUpdatedAt) {
+          await loadPhonebook();
+          refreshPhonebookDatalist();
+          const searchVal = document.getElementById("pbSearch")?.value || "";
+          refreshPhonebookTable(searchVal);
+          window.__lastAppliedContactsUpdatedAt = remoteUpdated;
+        }
+      }
+    } catch (e) {
+      console.warn("Background phonebook refresh failed", e);
+    }
+  }
+
+  /* ===========================
+     PHONEBOOK UI init
+     =========================== */
+  function initPhonebookView() {
+    const addBtn     = document.getElementById("pbAddBtn");
+    const nameInput  = document.getElementById("pbName");
+    const roleInput  = document.getElementById("pbRole");
+    const phoneInput = document.getElementById("pbPhone");
+    const notesInput = document.getElementById("pbNotes");
+    const searchInput= document.getElementById("pbSearch");
+
+    addBtn.addEventListener("click", async () => {
+      const name  = nameInput.value.trim();
+      const role  = roleInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const notes = notesInput.value.trim();
+
+      if (!name || !phone) {
+        alert("Name and phone number are required.");
+        return;
+      }
+
+      phonebook.push({ id: nextPhonebookId(), name, role, phone, notes });
+      await savePhonebook();
+
+      const searchVal = searchInput?.value || "";
+      refreshPhonebookTable(searchVal);
+      refreshPhonebookDatalist();
+      updateAllPhoneMarks();
+
+      nameInput.value = "";
+      roleInput.value = "";
+      phoneInput.value = "";
+      notesInput.value = "";
+      nameInput.focus();
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        refreshPhonebookTable(searchInput.value);
+      });
+    }
+  }
+
+  /* ===========================
+     MCC modal bindings
+     =========================== */
+  
+  /* ===========================
+     MCC: Command Structure & Additional Resources
+     =========================== */
+  function getCmd(area){
+    try{
+      const raw = localStorage.getItem(mccCmdKey(area,"data"));
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function setCmd(area, obj){
+    localStorage.setItem(mccCmdKey(area,"data"), JSON.stringify(obj || {}));
+    // not part of the main competency timestamp, but still snapshot
+    queueSnapshot("mcc_cmd_edit");
+  }
+
+  function defaultCmd(){
+    return {
+      strategic: { team: "", contact: "" },
+      tactical: [], // {team, contact}
+      resources: [] // {type, start, end, location, contact}
+    };
+  }
+
+  
+  const CMD = { openArea: null, draft: null };
+
+  function isCmdEmpty(obj){
+    if (!obj) return true;
+    const sTeam = (obj.strategic?.team || "").trim();
+    const sCon  = (obj.strategic?.contact || "").trim();
+    const t = (obj.tactical || []).some(r => (r.team||"").trim() || (r.contact||"").trim());
+    const r = (obj.resources || []).some(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim());
+    return !(sTeam || sCon || t || r);
+  }
+
+  function fmtDatetimeUK(v){
+    // input is datetime-local format: YYYY-MM-DDTHH:MM
+    if (!v) return "";
+    try{
+      const [dPart, tPart] = v.split("T");
+      if (!dPart) return v;
+      const [yy,mm,dd] = dPart.split("-");
+      const time = (tPart || "").slice(0,5);
+      if (yy && mm && dd){
+        return `${dd}/${mm}/${yy}${time ? " " + time : ""}`;
+      }
+      return v;
+    }catch(e){ return v; }
+  }
+
+  function escapeAndDash(v){
+    const s = (v || "").toString().trim();
+    return s ? escapeHtml(s) : "—";
+  }
+
+  function renderCmdSummary(area, data){
+    const empty = isCmdEmpty(data);
+    if (empty){
+      return `<div style="color:var(--muted); font-size:0.86rem; margin-top:0.35rem;">No command/resource data recorded.</div>`;
+    }
+
+    const sTeam = (data.strategic?.team || "").trim();
+    const sCon  = (data.strategic?.contact || "").trim();
+
+    const tactical = (data.tactical || []).filter(r => (r.team||"").trim() || (r.contact||"").trim());
+    const resources = (data.resources || []).filter(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim());
+
+    const tacHtml = tactical.length ? `
+      <ul style="margin:0.25rem 0 0; padding-left:1.1rem; color:#111827; font-size:0.88rem;">
+        ${tactical.map(r => `<li><strong>${escapeAndDash(r.team)}</strong>: ${escapeAndDash(r.contact)}</li>`).join("")}
+      </ul>` : `<div style="color:var(--muted); font-size:0.86rem;">—</div>`;
+
+    const resTypeLabel = (t) => (t === "staffing" ? "Staffing" : (t === "competency" ? "Competency cover" : "Asset"));
+
+    const resHtml = resources.length ? `
+      <ul style="margin:0.25rem 0 0; padding-left:1.1rem; color:#111827; font-size:0.88rem;">
+        ${resources.map(x => {
+          const when = `${fmtDatetimeUK(x.start)}${x.end ? " → " + fmtDatetimeUK(x.end) : ""}`.trim();
+          const bits = [
+            `<strong>${escapeHtml(resTypeLabel(x.type || "asset"))}</strong>`,
+            x.description ? `<span style="color:#111827;">— ${escapeHtml(x.description)}</span>` : "",
+            when ? `<span style="color:var(--muted);">(${escapeHtml(when)})</span>` : "",
+            x.location ? `@ ${escapeHtml(x.location)}` : "",
+            x.contact ? `| ${escapeHtml(x.contact)}` : ""
+          ].filter(Boolean).join(" ");
+          return `<li>${bits}</li>`;
+        }).join("")}
+      </ul>` : `<div style="color:var(--muted); font-size:0.86rem;">—</div>`;
+
+    return `
+      <div class="mcc-cmd-block">
+        <div class="label">Strategic contact</div>
+        <div style="font-size:0.9rem; color:#111827;"><strong>${escapeAndDash(sTeam)}</strong> · ${escapeAndDash(sCon)}</div>
+      </div>
+      <div class="mcc-cmd-block">
+        <div class="label">Tactical leads</div>
+        ${tacHtml}
+      </div>
+      <div class="mcc-cmd-block">
+        <div class="label">Resources</div>
+        ${resHtml}
+      </div>
+    `;
+  }
+
+  function renderMCCCommand(){
+    const grid = document.getElementById("mccCmdGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    MCC.areas.forEach(area => {
+      const data = getCmd(area) || defaultCmd();
+      const empty = isCmdEmpty(data);
+
+      const card = document.createElement("div");
+      card.className = "mcc-cmd-card";
+
+      card.innerHTML = `
+        <div class="mcc-cmd-head">
+          <div class="title">${area}</div>
+          <button class="mcc-add" data-action="edit-cmd" style="border-style:solid; border-color: var(--border);">
+            ${empty ? "+ Add" : "Edit"}
+          </button>
+        </div>
+        <div class="cmd-summary">${renderCmdSummary(area, data)}</div>
+      `;
+
+      card.querySelector('[data-action="edit-cmd"]').onclick = () => openCmdModal(area);
+
+      grid.appendChild(card);
+    });
+  }
+
+  function openCmdModal(area){
+    CMD.openArea = area;
+    const obj = getCmd(area) || defaultCmd();
+    CMD.draft = JSON.parse(JSON.stringify(obj));
+
+    document.getElementById("cmdModalArea").textContent = area;
+    document.getElementById("cmdModalTitle").textContent = `Command structure – ${area}`;
+
+    document.getElementById("cmdStrategicTeam").value = CMD.draft.strategic?.team || "";
+    document.getElementById("cmdStrategicContact").value = CMD.draft.strategic?.contact || "";
+
+    renderCmdModalLists();
+
+    const backdrop = document.getElementById("cmdModalBackdrop");
+    backdrop.style.display = "flex";
+    backdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeCmdModal(){
+    const backdrop = document.getElementById("cmdModalBackdrop");
+    if (!backdrop) return;
+    backdrop.style.display = "none";
+    backdrop.setAttribute("aria-hidden", "true");
+    CMD.openArea = null;
+    CMD.draft = null;
+  }
+
+  function renderCmdModalLists(){
+    const tWrap = document.getElementById("cmdTacticalList");
+    const rWrap = document.getElementById("cmdResourceList");
+    if (!CMD.draft) return;
+
+    // Tactical
+    tWrap.innerHTML = "";
+    (CMD.draft.tactical || []).forEach((row, idx) => {
+      const r = document.createElement("div");
+      r.className = "mcc-row";
+      r.innerHTML = `
+        <input class="mcc-input" placeholder="Team" value="${escapeHtml(row.team || "")}">
+        <input class="mcc-input" placeholder="Contact name" value="${escapeHtml(row.contact || "")}">
+        <button class="rm" title="Remove">×</button>
+      `;
+      const ins = r.querySelectorAll("input");
+      ins[0].oninput = () => { CMD.draft.tactical[idx].team = ins[0].value || ""; };
+      ins[1].oninput = () => { CMD.draft.tactical[idx].contact = ins[1].value || ""; };
+      r.querySelector(".rm").onclick = () => { CMD.draft.tactical.splice(idx,1); renderCmdModalLists(); };
+      tWrap.appendChild(r);
+    });
+
+    // Resources
+    rWrap.innerHTML = "";
+    (CMD.draft.resources || []).forEach((row, idx) => {
+      const r = document.createElement("div");
+      r.className = "cmd-res-item";
+      r.innerHTML = `
+        <div class="cmd-res-top">
+          <select class="mcc-select2">
+            <option value="asset">Asset</option>
+            <option value="staffing">Staffing</option>
+            <option value="competency">Competency cover</option>
+          </select>
+          <input class="mcc-input" placeholder="Description" value="${escapeHtml(row.description || "")}">
+          <input class="mcc-input" type="datetime-local" value="${escapeHtml(row.start || "")}">
+          <input class="mcc-input" type="datetime-local" value="${escapeHtml(row.end || "")}">
+          <button class="rm" title="Remove">×</button>
+        </div>
+        <div class="cmd-res-bottom">
+          <input class="mcc-input" placeholder="Location" value="${escapeHtml(row.location || "")}">
+          <input class="mcc-input" placeholder="Contact" value="${escapeHtml(row.contact || "")}">
+        </div>
+      `;
+      const sel = r.querySelector("select");
+      const inputs = r.querySelectorAll("input");
+      sel.value = row.type || "asset";
+      sel.onchange = () => { CMD.draft.resources[idx].type = sel.value; };
+      inputs[0].oninput = () => { CMD.draft.resources[idx].description = inputs[0].value || ""; };
+      inputs[1].oninput = () => { CMD.draft.resources[idx].start = inputs[1].value; };
+      inputs[2].oninput = () => { CMD.draft.resources[idx].end = inputs[2].value; };
+      inputs[3].oninput = () => { CMD.draft.resources[idx].location = inputs[3].value || ""; };
+      inputs[4].oninput = () => { CMD.draft.resources[idx].contact = inputs[4].value || ""; };
+      r.querySelector(".rm").onclick = () => { CMD.draft.resources.splice(idx,1); renderCmdModalLists(); };
+      rWrap.appendChild(r);
+    });
+  }
+
+  function saveCmdModal(){
+    const area = CMD.openArea;
+    if (!area || !CMD.draft) return;
+
+    CMD.draft.strategic.team = document.getElementById("cmdStrategicTeam").value || "";
+    CMD.draft.strategic.contact = document.getElementById("cmdStrategicContact").value || "";
+
+    setCmd(area, CMD.draft);
+    // Keep command updates aligned with "freshness": bump the DU last_updated too.
+    localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+
+    renderMCCTiles();
+    renderMCCCommand();
+    queueSnapshot("mcc_command_save");
+    closeCmdModal();
+  }
+
+  function clearCmdModal(){
+    if (!CMD.draft) return;
+    CMD.draft = defaultCmd();
+    document.getElementById("cmdStrategicTeam").value = "";
+    document.getElementById("cmdStrategicContact").value = "";
+    renderCmdModalLists();
+  }
+
+  function initCmdModal(){
+    const backdrop = document.getElementById("cmdModalBackdrop");
+    const closeBtn = document.getElementById("cmdModalClose");
+    const cancelBtn = document.getElementById("cmdModalCancelBtn");
+    const saveBtn = document.getElementById("cmdModalSaveBtn");
+    const clearBtn = document.getElementById("cmdModalClearBtn");
+    const addTac = document.getElementById("cmdAddTactical");
+    const addRes = document.getElementById("cmdAddResource");
+
+    if (closeBtn) closeBtn.onclick = closeCmdModal;
+    if (cancelBtn) cancelBtn.onclick = closeCmdModal;
+    if (saveBtn) saveBtn.onclick = saveCmdModal;
+    if (clearBtn) clearBtn.onclick = clearCmdModal;
+
+    if (addTac) addTac.onclick = (e) => {
+      e.preventDefault();
+      if (!CMD.draft) return;
+      CMD.draft.tactical.push({team:"", contact:""});
+      renderCmdModalLists();
+    };
+    if (addRes) addRes.onclick = (e) => {
+      e.preventDefault();
+      if (!CMD.draft) return;
+      CMD.draft.resources.push({type:"asset", description:"", start:"", end:"", location:"", contact:""});
+      renderCmdModalLists();
+    };
+
+    if (backdrop){
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeCmdModal(); });
+    }
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeCmdModal(); });
+  }
+
+  function initCmdToggle(){
+    const details = document.getElementById("mccCmdDetails");
+    const btn = document.getElementById("mccCmdToggleBtn");
+    if (!details || !btn) return;
+
+    const sync = () => { btn.textContent = details.open ? "–" : "+"; };
+    sync();
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      details.open = !details.open;
+      sync();
+    });
+
+    details.addEventListener("toggle", sync);
+  }
+
+
+function initMccModal(){
+    const backdrop = document.getElementById("mccModalBackdrop");
+    const closeBtn = document.getElementById("mccModalClose");
+    const saveBtn  = document.getElementById("mccModalSaveBtn");
+    const resetBtn = document.getElementById("mccModalResetBtn");
+
+    if (closeBtn) closeBtn.addEventListener("click", closeMCCModal);
+    if (saveBtn)  saveBtn.addEventListener("click", saveMCCModal);
+    if (resetBtn) resetBtn.addEventListener("click", resetOpenMCCTile);
+
+    if (backdrop) {
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeMCCModal();
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMCCModal();
+    });
+  }
+
+  /* ===========================
+     Boot
+     =========================== */
+  function tick() {
+    refreshClock();
+    updateOnDutyHighlighting();
+    updateOnDutySummary();
+    maybeAutoWipeMCC();
+  }
+
   (async () => {
     await loadPhonebook();
     await loadLatestBoardState();
 
-    renderTeams();    initNavTabs();
+    renderTeams();
+    initNavTabs();
     initPhonebookView();
     initSnapshotHooks();
+    initMccModal();
+    initCmdModal();
+    initCmdToggle();
+    // Safety net: event delegation for Command tile add/edit buttons (in case inline handlers get lost)
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest('[data-action="edit-cmd"]');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const card = btn.closest(".mcc-cmd-card");
+      const area = card?.querySelector(".mcc-cmd-head .title")?.textContent?.trim();
+      if (area) openCmdModal(area);
+    }, true);
 
-    refreshPhonebookTable('');
+
+    refreshPhonebookTable("");
     refreshPhonebookDatalist();
     updateAllPhoneMarks();
+
+    // initial MCC render + wipe check
+    maybeAutoWipeMCC();
+    renderMCCTiles();
+    renderMCCCommand();
 
     tick();
     setInterval(tick, 30_000);
     setInterval(refreshFromSupabase, 10_000);
-})();
-;
-
+  })();
 </script>
 </body>
 </html>
