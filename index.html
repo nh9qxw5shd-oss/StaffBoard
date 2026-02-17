@@ -1425,7 +1425,9 @@
       .replace(/'/g, "&#39;");
   }
 
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
 
   const BOARD_ID = "booking_on_board_main";
   const STORAGE_PREFIX = "booking_on_board_light_v1_";
@@ -2300,6 +2302,13 @@
           if (savedMissing.includes(opt)) b.classList.add("on");
           b.addEventListener("click", () => {
             b.classList.toggle("on");
+            // persist missing competencies selection immediately (Supabase-first, local as backup)
+            try {
+              const selected = Array.from(chipsWrap.querySelectorAll(".mcc-chip.on")).map(x => x.textContent).filter(Boolean);
+              localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(selected));
+              localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+            } catch(e){}
+            queueSnapshot("mcc_tile_change");
             updateModalPill(area, grid, worksTa, pill);
           });
           chipsWrap.appendChild(b);
@@ -2435,7 +2444,9 @@
 
     renderMCCTiles();
       renderMCCCommand();
-    renderMCCCommand();
+      syncCmdDetailsDefaultOpen();
+      renderMCCCommand();
+    syncCmdDetailsDefaultOpen();
     queueSnapshot("mcc_save");
     closeMCCModal();
   }
@@ -2451,7 +2462,6 @@
     localStorage.removeItem(mccKeyOvRag(area));
     localStorage.removeItem(mccKeyOvWhy(area));
     localStorage.setItem(mccKeyOvOn(area), "0");
-    localStorage.removeItem(mccCmdKey(area,"data"));
   }
 
   function resetOpenMCCTile(){
@@ -2471,6 +2481,7 @@
 
     renderMCCTiles();
     renderMCCCommand();
+    syncCmdDetailsDefaultOpen();
     queueSnapshot("mcc_reset");
     closeMCCModal();
   }
@@ -2495,6 +2506,7 @@
       localStorage.setItem(MCC.wipeKey, today);
       renderMCCTiles();
       renderMCCCommand();
+    syncCmdDetailsDefaultOpen();
       queueSnapshot("mcc_autowipe");
     }
   }
@@ -2510,13 +2522,13 @@
           rag: normaliseRag(localStorage.getItem(mccKeyOvRag(area))),
           reason: localStorage.getItem(mccKeyOvWhy(area)) || ""
         },
-        command: (() => { try { return JSON.parse(localStorage.getItem(mccCmdKey(area,"data")) || "null"); } catch(e){ return null; } })(),
         sections: {}
       };
       mccSectionsFor(area).forEach(sec => {
         state.areas[area].sections[sec] = {
           rag: normaliseRag(localStorage.getItem(mccKeyStatus(area, sec))),
-          mitigation: localStorage.getItem(mccKeyMit(area, sec)) || ""
+          mitigation: localStorage.getItem(mccKeyMit(area, sec)) || "",
+          missing: mccLoadMissing(area, sec)
         };
       });
     });
@@ -2548,11 +2560,6 @@
         else localStorage.removeItem(mccKeyOvWhy(area));
       }
 
-      // command (optional)
-      if (a.command){
-        try{ localStorage.setItem(mccCmdKey(area,"data"), JSON.stringify(a.command)); }catch(e){}
-      }
-
       if (a.sections) {
         mccSectionsFor(area).forEach(sec => {
           const s = a.sections[sec];
@@ -2563,9 +2570,38 @@
 
           const mit = (s.mitigation || "").toString();
           if ((rag === "amber" || rag === "red") && mit.trim()) localStorage.setItem(mccKeyMit(area, sec), mit);
-          else localStorage.removeItem(mccKeyMit(area, sec));
+          else localStorage.removeItem(mccKeyMit(area, sec))
+
+          // missing competencies (multi-select)
+          try {
+            const miss = Array.isArray(s.missing) ? s.missing.filter(Boolean) : [];
+            if (miss.length) localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(miss));
+            else localStorage.removeItem(mccKeyMissing(area, sec));
+          } catch(e){}
         });
       }
+    });
+  }
+
+
+  // Command & Additional Resources are persisted separately so MCC daily auto-wipe never touches them.
+  function getMccCommandState(){
+    const state = { version: 1, areas: {} };
+    MCC.areas.forEach(area => {
+      let data = null;
+      try { data = JSON.parse(localStorage.getItem(mccCmdKey(area,"data")) || "null"); } catch(e) { data = null; }
+      state.areas[area] = data;
+    });
+    return state;
+  }
+
+  function applyMccCommandStateToLocalStorage(cmdState){
+    if (!cmdState || !cmdState.areas) return;
+    MCC.areas.forEach(area => {
+      const data = cmdState.areas[area];
+      if (data === undefined) return; // nothing supplied
+      if (data === null) return; // do not delete locally unless explicitly cleared via UI
+      try { localStorage.setItem(mccCmdKey(area,"data"), JSON.stringify(data)); } catch(e) {}
     });
   }
 
@@ -2606,8 +2642,7 @@
       version: 2,
       captured_at: new Date().toISOString(),
       teams: [],
-      mcc: getMccState()
-    };
+      mcc: getMccState()};
 
     teams.forEach(team => {
       const slug = slugify(team.name);
@@ -2675,6 +2710,51 @@
     }
   }
 
+
+  // ===== MCC Command State (Supabase-backed, not wiped at 05:00) =====
+  async function loadMccCommandState() {
+    try {
+      const { data, error } = await supabaseClient
+        .from("mcc_command_state")
+        .select("command, updated_at")
+        .eq("board_id", BOARD_ID)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data || !data.command) return;
+
+      // store in local so the UI renders instantly, but Supabase is the source of truth
+      applyMccCommandStateToLocalStorage({ version: 1, areas: data.command });
+    } catch (e) {
+      console.error("Failed to load MCC command state (continuing with local)", e);
+    }
+  }
+
+  async function persistMccCommandState(eventType = "mcc_command_change") {
+    try {
+      const cmd = getMccCommandState();
+      const areas = (cmd && cmd.areas) ? cmd.areas : {};
+
+      const { error: upErr } = await supabaseClient
+        .from("mcc_command_state")
+        .upsert({ board_id: BOARD_ID, command: areas }, { onConflict: "board_id" });
+
+      if (upErr) throw upErr;
+
+      // Optional: keep an audit trail in board_snapshots without embedding the full command in board_state
+      try {
+        const { error: snapErr } = await supabaseClient
+          .from("board_snapshots")
+          .insert({ board_id: BOARD_ID, event_type: eventType, state: { type: "mcc_command_state_ref", captured_at: new Date().toISOString() } });
+        if (snapErr) throw snapErr;
+      } catch (e) {
+        // snapshots are nice-to-have, not critical
+      }
+    } catch (e) {
+      console.error("Failed to persist MCC command state", e);
+    }
+  }
+
   async function loadLatestBoardState() {
     try {
       const { data, error } = await supabaseClient
@@ -2705,6 +2785,9 @@
 
       // MCC optional
       if (state.mcc) applyMccStateToLocalStorage(state.mcc);
+
+      // Command/resources are stored in public.mcc_command_state (not in board_state)
+      await loadMccCommandState();
 
       renderTeams();
       updateOnDutyHighlighting();
@@ -2859,6 +2942,25 @@
     const t = (obj.tactical || []).some(r => (r.team||"").trim() || (r.contact||"").trim());
     const r = (obj.resources || []).some(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim());
     return !(sTeam || sCon || t || r);
+  }
+
+
+  function anyCmdHasData(){
+    try{
+      return (MCC?.areas || []).some(area => !isCmdEmpty(getCmd(area)));
+    }catch(e){ return false; }
+  }
+
+  function syncCmdDetailsDefaultOpen(){
+    const details = document.getElementById("mccCmdDetails");
+    const btn = document.getElementById("mccCmdToggleBtn");
+    if (!details) return;
+
+    const shouldOpen = anyCmdHasData();
+    details.open = !!shouldOpen;
+
+    // Keep the +/- button in sync even if initCmdToggle hasn't run yet.
+    if (btn) btn.textContent = details.open ? "–" : "+";
   }
 
   function fmtDatetimeUK(v){
@@ -3043,7 +3145,7 @@
     });
   }
 
-  function saveCmdModal(){
+  async function saveCmdModal(){
     const area = CMD.openArea;
     if (!area || !CMD.draft) return;
 
@@ -3056,7 +3158,9 @@
 
     renderMCCTiles();
     renderMCCCommand();
-    queueSnapshot("mcc_command_save");
+    syncCmdDetailsDefaultOpen();
+    await persistMccCommandState("mcc_command_save");
+    queueSnapshot("mcc_tile_change");
     closeCmdModal();
   }
 
@@ -3117,6 +3221,8 @@
     });
 
     details.addEventListener("toggle", sync);
+    // Default open when there is data; collapse when cleared.
+    syncCmdDetailsDefaultOpen();
   }
 
 
@@ -3182,6 +3288,7 @@ function initMccModal(){
     maybeAutoWipeMCC();
     renderMCCTiles();
     renderMCCCommand();
+    syncCmdDetailsDefaultOpen();
 
     tick();
     setInterval(tick, 30_000);
