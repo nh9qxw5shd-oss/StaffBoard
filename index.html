@@ -2936,13 +2936,30 @@ function momWorstStatus(obj){
 
       if (stateErr) throw stateErr;
 
-      const { error: snapErr } = await supabaseClient
-        .from("board_snapshots")
-        .insert({ board_id: BOARD_ID, event_type: eventType, state });
+      // board_snapshots is a view over booking.board_snapshots, which enforces a CHECK constraint on event_type.
+      // Allowed legacy values: change, wipe, manual. Map everything else to "change".
+      const allowed = new Set(["change","wipe","manual"]);
+      const mappedType = allowed.has(eventType) ? eventType : "change";
 
-      if (snapErr) throw snapErr;
+      const tryInsertSnapshot = async (etype) => {
+        return await supabaseClient
+          .from("board_snapshots")
+          .insert({ board_id: BOARD_ID, event_type: etype, state });
+      };
+
+      let { error: snapErr } = await tryInsertSnapshot(mappedType);
+
+      // If we still hit a constraint (23514) for any reason, fall back to "change"
+      if (snapErr && snapErr.code === "23514") {
+        ({ error: snapErr } = await tryInsertSnapshot("change"));
+      }
+
+      // Snapshots are nice-to-have: never block the main save
+      if (snapErr) {
+        console.warn("Board snapshot insert failed (continuing without snapshot)", snapErr);
+      }
     } catch (e) {
-      console.error("Board snapshot failed (offline / RLS / config?)", e);
+      console.error("Board state save failed (offline / RLS / config?)", e);
     }
   }
 
