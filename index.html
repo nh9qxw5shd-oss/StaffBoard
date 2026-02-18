@@ -642,6 +642,117 @@
     .mcc-guidance .row .dot.r{ background: var(--red); }
 
     
+
+
+/* ===== MCC: MOM Coverage (weekly) ===== */
+.mom-wrap{
+  margin-top: 1rem;
+  border-top: 1px dashed var(--border);
+  padding-top: 1rem;
+}
+.mom-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom: 0.75rem;
+}
+.mom-head .title{
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.mom-head .sub{
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.mom-grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 14px;
+}
+@media (max-width: 1100px){
+  .mom-grid{ grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+}
+@media (max-width: 760px){
+  .mom-grid{ grid-template-columns: 1fr; }
+}
+.mom-tile{
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 0.9rem 0.9rem 0.85rem;
+  overflow: hidden;
+  min-height: 260px;
+}
+.mom-tile.hue-g{ background: linear-gradient(135deg, rgba(16,185,129,0.14), rgba(255,255,255,0.95) 55%); border-color: rgba(16,185,129,0.35); }
+.mom-tile.hue-a{ background: linear-gradient(135deg, rgba(245,158,11,0.16), rgba(255,255,255,0.95) 55%); border-color: rgba(245,158,11,0.40); }
+.mom-tile.hue-r{ background: linear-gradient(135deg, rgba(239,68,68,0.14), rgba(255,255,255,0.95) 55%); border-color: rgba(239,68,68,0.40); }
+.mom-tile.hue-x{ background: linear-gradient(135deg, rgba(156,163,175,0.18), rgba(255,255,255,0.95) 55%); border-color: rgba(156,163,175,0.45); }
+
+.mom-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:0.75rem;
+  margin-bottom: 0.65rem;
+}
+.mom-title .name{ font-weight: 800; letter-spacing:-0.02em; }
+.mom-plus{
+  position:absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(17,24,39,0.12);
+  background: rgba(17,24,39,0.92);
+  color: white;
+  font-size: 22px;
+  line-height: 44px;
+  text-align:center;
+  cursor:pointer;
+  box-shadow: 0 10px 24px rgba(17,24,39,0.25);
+}
+.mom-plus:hover{ transform: translateY(-1px); }
+.mom-days{
+  display:flex;
+  flex-direction:column;
+  gap: 0.45rem;
+  padding-right: 58px; /* breathing room for + */
+}
+.mom-row{
+  display:grid;
+  grid-template-columns: 18px 48px 1fr;
+  gap: 0.55rem;
+  align-items:center;
+  min-width: 0;
+}
+.mom-row .day{ font-weight: 650; color: var(--ink); }
+.mom-row .txt{
+  color: var(--muted);
+  font-size: 0.9rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mom-notes{
+  margin-top: 0.75rem;
+  border-top: 1px dashed rgba(229,231,235,0.9);
+  padding-top: 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding-right: 58px;
+}
+.mom-notes .lbl{ font-weight: 700; font-size: 0.78rem; color: #6b7280; letter-spacing: 0.06em; }
+.mom-notes .val{ margin-top: 0.25rem; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.mom-notes .empty{ font-style: italic; opacity: 0.75; }
+
     /* ===== MCC: Command Structure & Additional Resources ===== */
     .mcc-cmd{
       margin-top: 1rem;
@@ -863,7 +974,11 @@
       align-items:center;
       justify-content:center;
       padding: 1rem;
-      z-index: 1000;
+      z-index: 2000;
+    }
+
+    .modal-backdrop.show{
+      display:flex;
     }
 
     .modal{
@@ -1015,6 +1130,22 @@
       padding: 0.25rem 0;
     }
     .mcc-mit textarea:focus{ outline:none; border-color:#111827; box-shadow:0 0 0 1px #11182711; }
+    /* Shared textarea styling (used by MOM notes etc.) */
+    .text-area{
+      width: 100%;
+      min-height: 68px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.95rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #fff;
+      resize: vertical;
+      color: var(--ink);
+    }
+    .text-area::placeholder{ color:#9ca3af; }
+    .text-area:focus{ outline:none; border-color:#111827; box-shadow:0 0 0 1px #11182711; }
+
 
     .modal-foot{
       padding: 0.85rem 1rem;
@@ -1174,7 +1305,18 @@
       </div>
       <div class="mcc-grid" id="mccGrid"></div>
 
-      
+
+<div class="mom-wrap">
+  <div class="mom-head">
+    <div>
+      <div class="title">MOM Coverage</div>
+      <div class="sub">Weekly cover view by MOM area. Use + to set day-by-day RAG and mitigation. Auto-wipes Mondays at <strong>05:00</strong>.</div>
+    </div>
+    <div class="muted">Grey = not yet updated this week.</div>
+  </div>
+  <div class="mom-grid" id="momGrid"></div>
+</div>
+
       <details class="mcc-cmd" id="mccCmdDetails">
         <summary>
           <div class="sum-title">Command Structure &amp; Additional Resources</div>
@@ -1268,13 +1410,52 @@
   </div>
 </div>
 
+
+<!-- MOM modal -->
+<div class="modal-backdrop" id="momModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="momModalTitle" style="max-width: 980px;">
+    <div class="modal-head">
+      <div>
+        <div class="title" id="momModalTitle">MOM cover</div>
+        <div class="sub" id="momModalSub">Set day-by-day cover position and mitigation for this MOM area. Auto-wipes Mondays at 05:00.</div>
+      </div>
+      <button class="x" id="momModalCloseX" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card" style="box-shadow:none; border:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:800; letter-spacing:-0.02em;" id="momAreaName">Area</div>
+            <div class="muted">Keep it concise. This is for weekly MOM cover planning and live awareness.</div>
+          </div>
+        </div>
+
+        <div id="momDaysForm" style="margin-top:0.9rem; display:flex; flex-direction:column; gap:0.75rem;"></div>
+
+        <div style="margin-top:0.9rem; border-top:1px dashed var(--border); padding-top:0.75rem;">
+          <div style="font-weight:700; font-size:0.78rem; color:#6b7280; letter-spacing:0.06em;">NOTES</div>
+          <textarea id="momNotesInput" class="text-area" placeholder="Anything to note for the week (constraints, hotspots, handback expectations, etc.)"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:0.85rem; flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="momModalClearBtn">Clear</button>
+          <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-ghost" id="momModalCancelBtn">Cancel</button>
+            <button class="btn btn-default" id="momModalSaveBtn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Command modal -->
 <div class="modal-backdrop" id="cmdModalBackdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cmdModalTitle">
     <div class="modal-head">
       <div>
         <div class="title" id="cmdModalTitle">Command structure</div>
-        <div class="sub" id="cmdModalSub">Set strategic contact, tactical leads, and additional resources for this DU area.</div>
+        <div class="sub" id="cmdModalSub">Set tactical leads and additional resources for this DU area.</div>
       </div>
       <button class="modal-close" id="cmdModalClose" title="Close">✕</button>
     </div>
@@ -1285,14 +1466,6 @@
           <div>
             <div style="font-weight:900; font-size:0.95rem;" id="cmdModalArea">Area</div>
             <div style="color:var(--muted); font-size:0.82rem;">Keep it concise. This is for rapid coordination during significant events.</div>
-          </div>
-        </div>
-
-        <div class="mcc-cmd-block">
-          <div class="label">Strategic contact</div>
-          <div class="cmd-strategic-grid">
-            <input class="mcc-input" id="cmdStrategicTeam" placeholder="Team / role">
-            <input class="mcc-input" id="cmdStrategicContact" placeholder="Contact name / number">
           </div>
         </div>
 
@@ -1999,16 +2172,76 @@
       "Leicester": ["Off Track & Drainage"],
       "Lincoln": ["Off Track & Drainage"]
     },
+    omitSectionsByArea: {
+      "Derby": ["OLE"],
+      "Lincoln": ["OLE"]
+    },
     keyPrefix: "mcc_v1_",
     wipeKey: "mcc_v1_last_wipe_date",
     openArea: null
   };
 
+/* ===========================
+   MOM COVERAGE (WEEKLY)
+   =========================== */
+const MOM = {
+  areas: ["Chesterfield","Derby","Nottingham","Leicester","Kettering","Bedford","Elstree","Kentish Town","Lincoln"],
+  days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+  keyPrefix: "mom_v1_",
+  wipeKey: "mom_v1_last_wipe_monday"
+};
+
+const MOM_STATUS = {
+  g: { label: "Full cover", clsDot: "g", hue: "hue-g" },
+  a: { label: "Reduced cover / mitigation", clsDot: "a", hue: "hue-a" },
+  r: { label: "Cover gap / no mitigation", clsDot: "r", hue: "hue-r" },
+  x: { label: "Not updated", clsDot: "x", hue: "hue-x" }
+};
+
+function momKey(area, field){ return `${MOM.keyPrefix}${slugify(area)}_${field}`; }
+function momLoad(area){
+  try{ return JSON.parse(localStorage.getItem(momKey(area,"data")) || "{}"); }catch{ return {}; }
+}
+function momSaveLocal(area, obj){
+  localStorage.setItem(momKey(area,"data"), JSON.stringify(obj || {}));
+}
+function momEmptyData(){
+  const days = {};
+  MOM.days.forEach(d => days[d] = { s:"x", m:"" });
+  return { days, notes:"" };
+}
+function momHasAnyData(obj){
+  if (!obj) return false;
+  if (obj.notes && obj.notes.trim()) return true;
+  const days = obj.days || {};
+  return MOM.days.some(d => {
+    const it = days[d] || {};
+    return (it.s && it.s !== "x") || (it.m && it.m.trim());
+  });
+}
+function momWorstStatus(obj){
+  const days = (obj && obj.days) ? obj.days : {};
+  let hasAmber=false, hasRed=false, allGrey=true;
+  MOM.days.forEach(d=>{
+    const s=(days[d]||{}).s || "x";
+    if (s !== "x") allGrey=false;
+    if (s==="r") hasRed=true;
+    else if (s==="a") hasAmber=true;
+  });
+  if (hasRed) return "r";
+  if (hasAmber) return "a";
+  if (allGrey) return "x";
+  return "g";
+}
+
+
+
 
   function mccSectionsFor(area){
     const base = MCC.baseSections.slice();
     const extra = (MCC.extraSectionsByArea && MCC.extraSectionsByArea[area]) ? MCC.extraSectionsByArea[area] : [];
-    return base.concat(extra);
+    const omit = (MCC.omitSectionsByArea && MCC.omitSectionsByArea[area]) ? MCC.omitSectionsByArea[area] : [];
+    return base.concat(extra).filter(s => !omit.includes(s));
   }
 
 
@@ -2630,7 +2863,9 @@
         // On entering MCC, ensure tiles are current
         if (view === "mcc") {
           maybeAutoWipeMCC();
+          maybeWeeklyMOMWipe();
           renderMCCTiles();
+          renderMomTiles();
         }
       });
     });
@@ -2642,7 +2877,8 @@
       version: 2,
       captured_at: new Date().toISOString(),
       teams: [],
-      mcc: getMccState()};
+      mcc: getMccState(),
+      mom: getMomState()};
 
     teams.forEach(team => {
       const slug = slugify(team.name);
@@ -2711,7 +2947,227 @@
   }
 
 
-  // ===== MCC Command State (Supabase-backed, not wiped at 05:00) =====
+  
+  // ===== MOM Coverage (weekly) =====
+  function momStatusText(s){
+    if (s === "g") return "Full cover";
+    if (s === "a") return "Reduced cover / mitigation";
+    if (s === "r") return "Cover gap / no mitigation";
+    return "Not updated";
+  }
+
+  function renderMomTiles(){
+    const grid = document.getElementById("momGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    MOM.areas.forEach(area => {
+      const raw = momLoad(area);
+      const data = (raw && raw.days) ? raw : momEmptyData();
+      const worst = momWorstStatus(data);
+
+      const tile = document.createElement("div");
+      tile.className = `mom-tile ${MOM_STATUS[worst].hue}`;
+      tile.setAttribute("data-mom-area", area);
+
+      const head = document.createElement("div");
+      head.className = "mom-title";
+      head.innerHTML = `<div class="name">${escapeHtml(area)}</div>`;
+      tile.appendChild(head);
+
+      const daysWrap = document.createElement("div");
+      daysWrap.className = "mom-days";
+
+      MOM.days.forEach(d => {
+        const it = (data.days && data.days[d]) ? data.days[d] : { s:"x", m:"" };
+        const s = it.s || "x";
+        const dotCls = (s==="g")?"green":(s==="a")?"amber":(s==="r")?"red":"grey";
+        let line = momStatusText(s);
+        if (s !== "g" && s !== "x" && it.m && String(it.m).trim()){
+          line += " · " + String(it.m).trim();
+        }
+
+        const row = document.createElement("div");
+        row.className = "mom-row";
+        row.innerHTML = `
+          <span class="rag-dot ${dotCls}"></span>
+          <div class="day">${d}</div>
+          <div class="txt">${escapeHtml(line)}</div>
+        `;
+        daysWrap.appendChild(row);
+      });
+
+      tile.appendChild(daysWrap);
+
+      const notes = document.createElement("div");
+      notes.className = "mom-notes";
+      const notesVal = (data.notes && String(data.notes).trim()) ? String(data.notes).trim() : "";
+      notes.innerHTML = `
+        <div class="lbl">NOTES</div>
+        <div class="val ${notesVal ? "" : "empty"}">${escapeHtml(notesVal || "—")}</div>
+      `;
+      tile.appendChild(notes);
+
+      const plus = document.createElement("button");
+      plus.type = "button";
+      plus.className = "mom-plus";
+      plus.textContent = "+";
+      plus.setAttribute("aria-label", `Edit ${area}`);
+      plus.addEventListener("click", () => openMOMModal(area));
+      tile.appendChild(plus);
+
+      grid.appendChild(tile);
+    });
+  }
+
+  let MOM_CURRENT_AREA = null;
+
+  function openMOMModal(area){
+    MOM_CURRENT_AREA = area;
+    const backdrop = document.getElementById("momModalBackdrop");
+    const title = document.getElementById("momModalTitle");
+    const areaName = document.getElementById("momAreaName");
+    const form = document.getElementById("momDaysForm");
+    const notes = document.getElementById("momNotesInput");
+
+    const raw = momLoad(area);
+    const data = (raw && raw.days) ? raw : momEmptyData();
+
+    title.textContent = `MOM cover – ${area}`;
+    areaName.textContent = area;
+    notes.value = data.notes || "";
+
+    form.innerHTML = "";
+    MOM.days.forEach(d=>{
+      const it = (data.days && data.days[d]) ? data.days[d] : { s:"x", m:"" };
+      const wrap = document.createElement("div");
+      wrap.className = "card";
+      wrap.style.boxShadow = "none";
+      wrap.style.border = "1px solid var(--border)";
+      wrap.style.padding = "0.75rem";
+      wrap.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <span class="rag-dot ${(it.s==="g")?"green":(it.s==="a")?"amber":(it.s==="r")?"red":"grey"}"></span>
+            <div style="font-weight:800;">${d}</div>
+          </div>
+          <select class="mcc-select mom-day-select" data-day="${d}">
+            <option value="g">Full cover (green)</option>
+            <option value="a">Reduced cover / mitigation available (amber)</option>
+            <option value="r">Cover gap / no mitigation (red)</option>
+            <option value="x">Not updated (grey)</option>
+          </select>
+        </div>
+        <div class="mcc-mit" data-day-mit="${d}" style="margin-top:0.65rem; display:none;">
+          <div class="label">MITIGATION / COVER DETAIL</div>
+          <textarea class="text-area mom-day-mit" data-day-mit-text="${d}" placeholder="Who is covering? What’s the workaround? Anything to brief ops with?"></textarea>
+        </div>
+      `;
+      form.appendChild(wrap);
+
+      const sel = wrap.querySelector(".mom-day-select");
+      sel.value = it.s || "x";
+      const mitBox = wrap.querySelector(`[data-day-mit="${d}"]`);
+      const mitTa = wrap.querySelector(`[data-day-mit-text="${d}"]`);
+      mitTa.value = it.m || "";
+
+      function refresh(){
+        const v = sel.value;
+        // show mitigation only for amber/red
+        if (v === "a" || v === "r"){
+          mitBox.style.display = "block";
+        } else {
+          mitBox.style.display = "none";
+          mitTa.value = "";
+        }
+        // update dot
+        const dot = wrap.querySelector(".rag-dot");
+        dot.classList.remove("green","amber","red","grey");
+        dot.classList.add(v==="g"?"green":v==="a"?"amber":v==="r"?"red":"grey");
+      }
+      sel.addEventListener("change", refresh);
+      refresh();
+    });
+
+    backdrop.classList.add("show");
+    backdrop.setAttribute("aria-hidden","false");
+  }
+
+  function closeMOMModal(){
+    const backdrop = document.getElementById("momModalBackdrop");
+    backdrop.classList.remove("show");
+    backdrop.setAttribute("aria-hidden","true");
+    MOM_CURRENT_AREA = null;
+  }
+
+  function setMomArea(area, obj){
+    momSaveLocal(area, obj || {});
+    queueSnapshot("mom_change"); // Supabase-first via board_state
+    renderMomTiles();
+  }
+
+  function saveMOMModal(){
+    if (!MOM_CURRENT_AREA) return closeMOMModal();
+    const form = document.getElementById("momDaysForm");
+    const notes = document.getElementById("momNotesInput").value || "";
+    const data = momEmptyData();
+    data.notes = notes;
+
+    MOM.days.forEach(d=>{
+      const sel = form.querySelector(`.mom-day-select[data-day="${d}"]`);
+      const ta  = form.querySelector(`.mom-day-mit[data-day-mit-text="${d}"]`);
+      const s = sel ? sel.value : "x";
+      const m = ta ? (ta.value || "") : "";
+      data.days[d] = { s, m: (s==="a" || s==="r") ? m : "" };
+    });
+
+    setMomArea(MOM_CURRENT_AREA, data);
+    closeMOMModal();
+  }
+
+  function clearMOMModal(){
+    if (!MOM_CURRENT_AREA) return;
+    setMomArea(MOM_CURRENT_AREA, momEmptyData());
+    closeMOMModal();
+  }
+
+  // Weekly wipe (Monday 05:00 local)
+  function maybeWeeklyMOMWipe(){
+    const now = new Date();
+    const isMonday = now.getDay() === 1; // Mon
+    const hh = now.getHours();
+    const mm = now.getMinutes();
+    const todayKey = now.toISOString().slice(0,10);
+    const last = localStorage.getItem(MOM.wipeKey) || "";
+    if (isMonday && (hh > 5 || (hh === 5 && mm >= 0)) && last !== todayKey){
+      MOM.areas.forEach(a => momSaveLocal(a, momEmptyData()));
+      localStorage.setItem(MOM.wipeKey, todayKey);
+      renderMomTiles();
+      queueSnapshot("mom_autowipe");
+    }
+  }
+
+  // MOM state in board_state (Supabase)
+  function getMomState(){
+    const state = { version: 1, last_wipe: localStorage.getItem(MOM.wipeKey) || null, areas: {} };
+    MOM.areas.forEach(area => {
+      const raw = momLoad(area);
+      const data = (raw && raw.days) ? raw : momEmptyData();
+      state.areas[area] = data;
+    });
+    return state;
+  }
+
+  function applyMomStateToLocalStorage(momState){
+    if (!momState || !momState.areas) return;
+    if (momState.last_wipe) localStorage.setItem(MOM.wipeKey, momState.last_wipe);
+    MOM.areas.forEach(area => {
+      const d = momState.areas[area];
+      if (d) momSaveLocal(area, d);
+    });
+  }
+
+// ===== MCC Command State (Supabase-backed, not wiped at 05:00) =====
   async function loadMccCommandState() {
     try {
       const { data, error } = await supabaseClient
@@ -2785,6 +3241,8 @@
 
       // MCC optional
       if (state.mcc) applyMccStateToLocalStorage(state.mcc);
+      // MOM optional
+      if (state.mom) applyMomStateToLocalStorage(state.mom);
 
       // Command/resources are stored in public.mcc_command_state (not in board_state)
       await loadMccCommandState();
@@ -2926,7 +3384,6 @@
 
   function defaultCmd(){
     return {
-      strategic: { team: "", contact: "" },
       tactical: [], // {team, contact}
       resources: [] // {type, start, end, location, contact}
     };
@@ -2937,12 +3394,11 @@
 
   function isCmdEmpty(obj){
     if (!obj) return true;
-    const sTeam = (obj.strategic?.team || "").trim();
-    const sCon  = (obj.strategic?.contact || "").trim();
     const t = (obj.tactical || []).some(r => (r.team||"").trim() || (r.contact||"").trim());
-    const r = (obj.resources || []).some(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim());
-    return !(sTeam || sCon || t || r);
+    const r = (obj.resources || []).some(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim() || (x.description||"").trim());
+    return !(t || r);
   }
+
 
 
   function anyCmdHasData(){
@@ -2989,11 +3445,8 @@
       return `<div style="color:var(--muted); font-size:0.86rem; margin-top:0.35rem;">No command/resource data recorded.</div>`;
     }
 
-    const sTeam = (data.strategic?.team || "").trim();
-    const sCon  = (data.strategic?.contact || "").trim();
-
     const tactical = (data.tactical || []).filter(r => (r.team||"").trim() || (r.contact||"").trim());
-    const resources = (data.resources || []).filter(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim());
+    const resources = (data.resources || []).filter(x => (x.type||"").trim() || (x.start||"").trim() || (x.end||"").trim() || (x.location||"").trim() || (x.contact||"").trim() || (x.description||"").trim());
 
     const tacHtml = tactical.length ? `
       <ul style="margin:0.25rem 0 0; padding-left:1.1rem; color:#111827; font-size:0.88rem;">
@@ -3018,10 +3471,6 @@
       </ul>` : `<div style="color:var(--muted); font-size:0.86rem;">—</div>`;
 
     return `
-      <div class="mcc-cmd-block">
-        <div class="label">Strategic contact</div>
-        <div style="font-size:0.9rem; color:#111827;"><strong>${escapeAndDash(sTeam)}</strong> · ${escapeAndDash(sCon)}</div>
-      </div>
       <div class="mcc-cmd-block">
         <div class="label">Tactical leads</div>
         ${tacHtml}
@@ -3067,9 +3516,6 @@
 
     document.getElementById("cmdModalArea").textContent = area;
     document.getElementById("cmdModalTitle").textContent = `Command structure – ${area}`;
-
-    document.getElementById("cmdStrategicTeam").value = CMD.draft.strategic?.team || "";
-    document.getElementById("cmdStrategicContact").value = CMD.draft.strategic?.contact || "";
 
     renderCmdModalLists();
 
@@ -3149,9 +3595,6 @@
     const area = CMD.openArea;
     if (!area || !CMD.draft) return;
 
-    CMD.draft.strategic.team = document.getElementById("cmdStrategicTeam").value || "";
-    CMD.draft.strategic.contact = document.getElementById("cmdStrategicContact").value || "";
-
     setCmd(area, CMD.draft);
     // Keep command updates aligned with "freshness": bump the DU last_updated too.
     localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
@@ -3167,12 +3610,34 @@
   function clearCmdModal(){
     if (!CMD.draft) return;
     CMD.draft = defaultCmd();
-    document.getElementById("cmdStrategicTeam").value = "";
-    document.getElementById("cmdStrategicContact").value = "";
     renderCmdModalLists();
   }
 
-  function initCmdModal(){
+  
+  function initMomModal(){
+    const closeX = document.getElementById("momModalCloseX");
+    const cancelBtn = document.getElementById("momModalCancelBtn");
+    const saveBtn = document.getElementById("momModalSaveBtn");
+    const clearBtn = document.getElementById("momModalClearBtn");
+    const backdrop = document.getElementById("momModalBackdrop");
+
+    if (closeX) closeX.onclick = closeMOMModal;
+    if (cancelBtn) cancelBtn.onclick = closeMOMModal;
+    if (saveBtn) saveBtn.onclick = saveMOMModal;
+    if (clearBtn) clearBtn.onclick = clearMOMModal;
+
+    if (backdrop){
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeMOMModal();
+      });
+    }
+    document.addEventListener("keydown", (e) => {
+      const bd = document.getElementById("momModalBackdrop");
+      if (e.key === "Escape" && bd && bd.classList.contains("show")) closeMOMModal();
+    });
+  }
+
+function initCmdModal(){
     const backdrop = document.getElementById("cmdModalBackdrop");
     const closeBtn = document.getElementById("cmdModalClose");
     const cancelBtn = document.getElementById("cmdModalCancelBtn");
@@ -3262,10 +3727,12 @@ function initMccModal(){
     await loadLatestBoardState();
 
     renderTeams();
+    renderMomTiles();
     initNavTabs();
     initPhonebookView();
     initSnapshotHooks();
     initMccModal();
+    initMomModal();
     initCmdModal();
     initCmdToggle();
     // Safety net: event delegation for Command tile add/edit buttons (in case inline handlers get lost)
@@ -3294,6 +3761,18 @@ function initMccModal(){
     setInterval(tick, 30_000);
     setInterval(refreshFromSupabase, 10_000);
   })();
+
+  // MOM: delegated open handler (robust against re-renders)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mom-plus");
+    if (!btn) return;
+    const tile = btn.closest("[data-mom-area]");
+    const area = tile ? tile.getAttribute("data-mom-area") : null;
+    if (!area) return;
+    e.preventDefault();
+    e.stopPropagation();
+    try { openMOMModal(area); } catch(err){ console.error("Failed to open MOM modal", err); }
+  }, true);
 </script>
 </body>
 </html>
