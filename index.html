@@ -2872,35 +2872,64 @@ function initMccViewButtons(){
   }
 
   function maybeAutoWipeMCC(){
+  // Server-gated wipes (prevents "new device at 07:44 wipes the board" nonsense)
   // MAIN wipes daily at 05:00 (never touches command/MOM)
-  const now = new Date();
-  const hours = now.getHours();
-  const mins = now.getMinutes();
-  const today = getTodayYMD();
-  const lastMain = localStorage.getItem(MCC.wipeKey) || "";
+  (async () => {
+    try {
+      if (typeof supabaseClient === "undefined" || !supabaseClient) return;
 
-  if (today !== lastMain && (hours > 5 || (hours === 5 && mins >= 0))) {
-    MCC.areas.forEach(a => resetMCCTile(a, "main"));
-    localStorage.setItem(MCC.wipeKey, today);
-    renderMCCTiles();
-    renderMCCCommand();
-    syncCmdDetailsDefaultOpen();
-    queueSnapshot("mcc_autowipe");
-  }
+      const now = new Date();
+      const hours = now.getHours();
+      const mins = now.getMinutes();
+      const today = getTodayYMD();
 
-  // PRELOADS wipe Mondays at 05:00 (sat + sun payloads only)
-  const dow = now.getDay(); // 1 = Monday
-  const lastPre = localStorage.getItem(MCC.preloadWipeKey) || "";
+      const afterFive = (hours > 5 || (hours === 5 && mins >= 0));
 
-  if (dow === 1 && today !== lastPre && (hours > 5 || (hours === 5 && mins >= 0))) {
-    ["sat","sun"].forEach(v => {
-      MCC.areas.forEach(a => resetMCCTile(a, v));
-    });
-    localStorage.setItem(MCC.preloadWipeKey, today);
-    renderMccViewBanner();
-    renderMCCTiles();
-    queueSnapshot("mcc_preload_autowipe");
-  }
+      // MAIN (daily)
+      if (afterFive) {
+        const lastMain = localStorage.getItem(MCC.wipeKey) || "";
+        if (today !== lastMain) {
+          const { data, error } = await supabaseClient.rpc("try_mcc_daily_wipe", {
+            p_board_id: BOARD_ID,
+            p_today: today
+          });
+          if (!error && data === true) {
+            MCC.areas.forEach(a => resetMCCTile(a, "main"));
+            renderMCCTiles();
+            renderMCCCommand();
+            syncCmdDetailsDefaultOpen();
+            // Use allowed snapshot type
+            queueSnapshot("wipe");
+          }
+          // Whatever happened, sync local marker to avoid repeated RPC calls
+          localStorage.setItem(MCC.wipeKey, today);
+        }
+      }
+
+      // PRELOADS (weekly, Monday 05:00)
+      const dow = now.getDay(); // 1 = Monday
+      if (dow === 1 && afterFive) {
+        const lastPre = localStorage.getItem(MCC.preloadWipeKey) || "";
+        if (today !== lastPre) {
+          const { data, error } = await supabaseClient.rpc("try_mcc_preload_weekly_wipe", {
+            p_board_id: BOARD_ID,
+            p_today: today
+          });
+          if (!error && data === true) {
+            ["sat","sun"].forEach(v => {
+              MCC.areas.forEach(a => resetMCCTile(a, v));
+            });
+            renderMccViewBanner();
+            renderMCCTiles();
+            queueSnapshot("wipe");
+          }
+          localStorage.setItem(MCC.preloadWipeKey, today);
+        }
+      }
+    } catch (e) {
+      console.warn("Wipe gate check failed (continuing without wiping).", e);
+    }
+  })();
 }
 
   function getMccState(view="main"){
@@ -3323,18 +3352,39 @@ function initMccViewButtons(){
 
   // Weekly wipe (Monday 05:00 local)
   function maybeWeeklyMOMWipe(){
-    const now = new Date();
-    const isMonday = now.getDay() === 1; // Mon
-    const hh = now.getHours();
-    const mm = now.getMinutes();
-    const todayKey = now.toISOString().slice(0,10);
-    const last = localStorage.getItem(MOM.wipeKey) || "";
-    if (isMonday && (hh > 5 || (hh === 5 && mm >= 0)) && last !== todayKey){
-      MOM.areas.forEach(a => momSaveLocal(a, momEmptyData()));
-      localStorage.setItem(MOM.wipeKey, todayKey);
-      renderMomTiles();
-      queueSnapshot("mom_autowipe");
-    }
+    // Server-gated weekly wipe (Monday 05:00). Exec page should never trigger writes; this is for main board only.
+    (async () => {
+      try {
+        if (typeof supabaseClient === "undefined" || !supabaseClient) return;
+
+        const now = new Date();
+        const isMonday = now.getDay() === 1; // Mon
+        const hh = now.getHours();
+        const mm = now.getMinutes();
+        const todayKey = now.toISOString().slice(0,10);
+        const afterFive = (hh > 5 || (hh === 5 && mm >= 0));
+
+        if (!isMonday || !afterFive) return;
+
+        const last = localStorage.getItem(MOM.wipeKey) || "";
+        if (last === todayKey) return;
+
+        const { data, error } = await supabaseClient.rpc("try_mom_weekly_wipe", {
+          p_board_id: BOARD_ID,
+          p_today: todayKey
+        });
+
+        if (!error && data === true) {
+          MOM.areas.forEach(a => momSaveLocal(a, momEmptyData()));
+          renderMomTiles();
+          queueSnapshot("wipe");
+        }
+
+        localStorage.setItem(MOM.wipeKey, todayKey);
+      } catch (e) {
+        console.warn("MOM wipe gate check failed (continuing without wiping).", e);
+      }
+    })();
   }
 
   // MOM state in board_state (Supabase)
