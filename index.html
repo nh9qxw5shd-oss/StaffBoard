@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cpath d='M22 14v36M42 14v36' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M26 20h12M26 30h12M26 40h12' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
   <title>Booking On Board – Duty Board & Phonebook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
@@ -3123,12 +3124,26 @@ function initMccViewButtons(){
 
   let snapshotTimer = null;
 
+  let __remoteHydrated = false;        // true only after we successfully loaded state from Supabase
+  let __hydrationAttempted = false;     // we tried at least once
+  let __suppressAutosave = true;        // block any writes until init completes
+  const __isLocalFile = (typeof location !== 'undefined' && location.protocol === 'file:');
+
   function queueSnapshot(eventType = "change") {
+    // Never publish before we have successfully hydrated from Supabase.
+    // Prevents "blank client overwrote the live board" incidents.
+    if (__suppressAutosave) return;
+    if (__isLocalFile) return;
+    if (!__remoteHydrated) return;
+
     if (snapshotTimer) clearTimeout(snapshotTimer);
     snapshotTimer = setTimeout(() => persistBoardState(eventType), 800);
   }
 
   async function persistBoardState(eventType = "change") {
+    if (__suppressAutosave) return;
+    if (__isLocalFile) return;
+    if (!__remoteHydrated) return;
     try {
       const state = buildBoardStateObject();
 
@@ -3460,9 +3475,11 @@ function initMccViewButtons(){
         .maybeSingle();
 
       if (error) throw error;
+      __hydrationAttempted = true;
       if (!data || !data.state) return;
 
       const state = data.state;
+      __remoteHydrated = true;
       if (state.teams && Array.isArray(state.teams)) {
         state.teams.forEach(t => {
           const slug = t.slug || slugify(t.name || "");
@@ -3982,6 +3999,10 @@ function initMccModal(){
     initSnapshotHooks();
     initMccModal();
     initMomModal();
+
+    // Now the page is fully initialised; allow publishes.
+    __suppressAutosave = __isLocalFile ? true : false;
+
     initCmdModal();
     initCmdToggle();
     // Safety net: event delegation for Command tile add/edit buttons (in case inline handlers get lost)
