@@ -2169,12 +2169,16 @@
     areas: ["Bedford", "Leicester", "Derby", "Lincoln"],
     baseSections: ["Track", "S&T", "OLE", "D&P"],
     extraSectionsByArea: {
-      "Leicester": ["Off Track & Drainage"],
-      "Lincoln": ["Off Track & Drainage"]
-    },
+  "Leicester": ["Off Track"],
+  "Lincoln": ["Off Track"]
+},
     omitSectionsByArea: {
-      "Derby": ["OLE"],
-      "Lincoln": ["OLE"]
+  "Derby": ["OLE"],
+  "Lincoln": ["OLE", "D&P"]
+},
+    sectionAliasesByArea: {
+      "Leicester": {"Off Track": "Off Track & Drainage"},
+      "Lincoln":   {"Off Track": "Off Track & Drainage"}
     },
     keyPrefix: "mcc_v1_",
     wipeKey: "mcc_v1_last_wipe_date",
@@ -2795,7 +2799,11 @@ function momWorstStatus(obj){
 
       if (a.sections) {
         mccSectionsFor(area).forEach(sec => {
-          const s = a.sections[sec];
+          let s = a.sections[sec];
+          if (!s) {
+            const alias = (MCC.sectionAliasesByArea && MCC.sectionAliasesByArea[area]) ? MCC.sectionAliasesByArea[area][sec] : null;
+            if (alias && a.sections[alias]) s = a.sections[alias];
+          }
           if (!s) return;
 
           const rag = normaliseRag(s.rag);
