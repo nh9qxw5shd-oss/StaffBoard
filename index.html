@@ -424,6 +424,56 @@
     .btn-icon-danger { background-color: var(--red); color: #f9fafb; }
 
     /* ===== Maintenance Critical Competency ===== */
+/* ===== MCC preload banner ===== */
+.mcc-preload-banner{
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: #f9fafb;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  flex-wrap:wrap;
+}
+.mcc-preload-banner .left{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  flex-wrap:wrap;
+}
+.mcc-preload-banner .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background:#111827;
+  color:#f9fafb;
+  font-size:0.78rem;
+  font-weight:700;
+}
+.mcc-preload-banner .seg{
+  display:inline-flex;
+  gap:0.4rem;
+  flex-wrap:wrap;
+}
+.mcc-preload-banner .seg button{
+  border:1px solid var(--border);
+  background:#fff;
+  color:#374151;
+  padding:0.35rem 0.65rem;
+  border-radius:999px;
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.mcc-preload-banner .seg button.active{
+  background:#111827;
+  color:#f9fafb;
+  border-color:#111827;
+}
+
     .mcc-grid{
       display:grid;
       grid-template-columns: repeat(2, minmax(360px, 1fr));
@@ -538,31 +588,35 @@
     }
 
     .mcc-line{
-      display:flex;
+      display:grid;
+      grid-template-columns: 18px 88px minmax(170px, 220px) 1fr;
       align-items:flex-start;
-      gap:0.5rem;
+      column-gap:0.5rem;
+      row-gap:0.15rem;
       font-size: 0.85rem;
       color: #374151;
     }
 
     .mcc-line .label{
-      width: 72px;
+      width:auto;
       font-weight: 700;
       color: #111827;
-      flex: 0 0 auto;
+      white-space: nowrap;
     }
 
     .mcc-line .msg{
-      flex: 1 1 auto;
       min-width: 0;
       color: #374151;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .mcc-line .mit{
-      flex: 1 1 auto;
       min-width: 0;
       color: #6b7280;
       font-size: 0.82rem;
+      text-align:left;
     }
 
     .mcc-works{
@@ -1303,6 +1357,18 @@
           Grey = not yet updated today.
         </div>
       </div>
+      <div class="mcc-preload-banner" id="mccPreloadBanner">
+  <div class="left">
+    <span class="muted">Weekend preload:</span>
+    <span class="pill" id="mccViewingPill">Viewing: Main</span>
+    <span class="muted" id="mccViewingHint"></span>
+  </div>
+  <div class="seg" role="tablist" aria-label="MCC view selector">
+    <button type="button" class="mcc-view-btn" data-mode="main">Main</button>
+    <button type="button" class="mcc-view-btn" data-mode="sat">Saturday preload</button>
+    <button type="button" class="mcc-view-btn" data-mode="sun">Sunday preload</button>
+  </div>
+</div>
       <div class="mcc-grid" id="mccGrid"></div>
 
 
@@ -2182,6 +2248,8 @@
     },
     keyPrefix: "mcc_v1_",
     wipeKey: "mcc_v1_last_wipe_date",
+    viewModeKey: "mcc_v1_view_mode",
+    preloadWipeKey: "mcc_v1_preload_last_wipe_monday",
     openArea: null
   };
 
@@ -2254,9 +2322,9 @@ function momWorstStatus(obj){
     const sec = (section || "").toLowerCase();
     // Map by discipline (order matters: "off track" contains "track")
     if (sec.includes("off track") || sec.includes("drainage")) return ["Chainsaws","Polesaws"];
-    if (sec.includes("track")) return ["TR11","TR12","COSS"];
+    if (sec.includes("track")) return ["TR11","COSS"];
     if (sec.includes("s&t") || sec.includes("s_t") || sec.includes("s&t")) {
-      const base = ["SMTH","SFI"];
+      const base = ["SMTH","SFI","COSS"];
       // Leicester only extras
       if ((area || "").toLowerCase() === "leicester") base.push("LXings","Mech Signalling");
       return base;
@@ -2266,25 +2334,93 @@ function momWorstStatus(obj){
     return [];
   }
 
-  function mccLoadMissing(area, section){
+  function mccLoadMissing(area, section, view=null){
     try {
-      const raw = localStorage.getItem(mccKeyMissing(area, section));
+      const raw = localStorage.getItem(mccKeyMissing(area, section, view));
       const arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr.filter(Boolean) : [];
     } catch(e){
       return [];
     }
   }
-  const mccKey = (area, part) => `${MCC.keyPrefix}${area.toLowerCase()}_${part}`;
-  const mccKeyStatus = (area, section) => mccKey(area, `status_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
-  const mccKeyMit    = (area, section) => mccKey(area, `mit_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
-  const mccKeyMissing= (area, section) => mccKey(area, `missing_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`);
-  const mccKeyWorks  = (area)          => mccKey(area, "critical_works");
-  const mccKeyUpdated= (area)          => mccKey(area, "last_updated");
-  const mccKeyOvOn   = (area)          => mccKey(area, "override_on");
-  const mccKeyOvRag  = (area)          => mccKey(area, "override_rag");
-  const mccKeyOvWhy  = (area)          => mccKey(area, "override_reason");
-  const mccCmdKey    = (area, part)     => mccKey(area, `cmd_${part}`);
+  function getUserSelectedMccView(){
+  const v = (localStorage.getItem(MCC.viewModeKey) || "main").toLowerCase();
+  return (v === "sat" || v === "sun") ? v : "main";
+}
+
+function getEffectiveMccView(){
+  const selected = getUserSelectedMccView();
+  if (selected !== "main") return selected;
+
+  // Auto-map Main -> preload on weekends (so the live view is correct on Sat/Sun)
+  const dow = new Date().getDay(); // 0 Sun .. 6 Sat
+  if (dow === 6) return "sat";
+  if (dow === 0) return "sun";
+  return "main";
+}
+
+function mccViewSuffix(view){
+  if (view === "sat") return "_sat";
+  if (view === "sun") return "_sun";
+  return "";
+}
+
+const mccKey = (area, part, view=null) => {
+  const v = (view || getEffectiveMccView());
+  return `${MCC.keyPrefix}${String(area||"").toLowerCase()}${mccViewSuffix(v)}_${part}`;
+};
+
+const mccKeyStatus = (area, section, view=null) => mccKey(area, `status_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`, view);
+const mccKeyMit    = (area, section, view=null) => mccKey(area, `mit_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`, view);
+const mccKeyMissing= (area, section, view=null) => mccKey(area, `missing_${section.toLowerCase().replace(/[^a-z0-9]+/g,'_')}`, view);
+const mccKeyWorks  = (area, view=null)          => mccKey(area, "critical_works", view);
+const mccKeyUpdated= (area, view=null)          => mccKey(area, "last_updated", view);
+const mccKeyOvOn   = (area, view=null)          => mccKey(area, "override_on", view);
+const mccKeyOvRag  = (area, view=null)          => mccKey(area, "override_rag", view);
+const mccKeyOvWhy  = (area, view=null)          => mccKey(area, "override_reason", view);
+const mccCmdKey    = (area, part)               => `${MCC.keyPrefix}${String(area||"").toLowerCase()}_cmd_${part}`; // command state is always "main"/global
+
+function setMccViewMode(mode){
+  const v = (mode || "main").toLowerCase();
+  const ok = (v === "sat" || v === "sun") ? v : "main";
+  localStorage.setItem(MCC.viewModeKey, ok);
+  renderMccViewBanner();
+  renderMCCTiles();
+}
+
+function renderMccViewBanner(){
+  const pill = document.getElementById("mccViewingPill");
+  const hint = document.getElementById("mccViewingHint");
+  const btns = document.querySelectorAll(".mcc-view-btn");
+  if (!pill) return;
+
+  const selected = getUserSelectedMccView();
+  const effective = getEffectiveMccView();
+
+  const label = (effective === "main") ? "Main" : (effective === "sat" ? "Saturday preload" : "Sunday preload");
+  pill.textContent = `Viewing: ${label}`;
+
+  if (hint){
+    if (selected === "main" && effective !== "main"){
+      hint.textContent = "(auto)";
+    } else {
+      hint.textContent = "";
+    }
+  }
+
+  btns.forEach(b => {
+    const m = (b.dataset.mode || "main").toLowerCase();
+    b.classList.toggle("active", m === selected);
+  });
+}
+
+function initMccViewButtons(){
+  const btns = document.querySelectorAll(".mcc-view-btn");
+  btns.forEach(b => {
+    b.addEventListener("click", () => setMccViewMode(b.dataset.mode));
+  });
+  renderMccViewBanner();
+}
 
   function normaliseRag(val){
     const v = (val || "").toLowerCase();
@@ -2307,14 +2443,15 @@ function momWorstStatus(obj){
   }
 
   function computeAreaRag(area){
-    const ovOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
+    const view = getEffectiveMccView();
+    const ovOn = (localStorage.getItem(mccKeyOvOn(area, view)) || "0") === "1";
     if (ovOn){
-      const ov = normaliseRag(localStorage.getItem(mccKeyOvRag(area)));
+      const ov = normaliseRag(localStorage.getItem(mccKeyOvRag(area, view)));
       if (ov === "amber" || ov === "red") return ov;
     }
     let worst = "unknown";
     mccSectionsFor(area).forEach(sec => {
-      const r = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
+      const r = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec, view)));
       if (ragSeverity(r) > ragSeverity(worst)) worst = r;
     });
     return worst;
@@ -2344,7 +2481,8 @@ function momWorstStatus(obj){
   }
 
   function touchMCCUpdated(area){
-    localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+    const view = getEffectiveMccView();
+    localStorage.setItem(mccKeyUpdated(area, view), new Date().toISOString());
   }
 
   function mitigationSnippet(text){
@@ -2355,6 +2493,7 @@ function momWorstStatus(obj){
   }
 
   function renderMCCTiles(){
+    const view = getEffectiveMccView();
     const grid = document.getElementById("mccGrid");
     if (!grid) return;
     grid.innerHTML = "";
@@ -2371,9 +2510,9 @@ function momWorstStatus(obj){
       lines.className = "mcc-lines";
 
       mccSectionsFor(area).forEach(sec => {
-        const rag = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
-        const mit = (localStorage.getItem(mccKeyMit(area, sec)) || "").trim();
-        const miss = mccLoadMissing(area, sec);
+        const rag = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec, view)));
+        const mit = (localStorage.getItem(mccKeyMit(area, sec, view)) || "").trim();
+        const miss = mccLoadMissing(area, sec, view);
 
         const line = document.createElement("div");
         line.className = "mcc-line";
@@ -2416,17 +2555,17 @@ function momWorstStatus(obj){
       `;
 
       const worksTa = works.querySelector("textarea");
-      worksTa.value = localStorage.getItem(mccKeyWorks(area)) || "";
+      worksTa.value = localStorage.getItem(mccKeyWorks(area, view)) || "";
       worksTa.addEventListener("input", () => {
-        localStorage.setItem(mccKeyWorks(area), worksTa.value);
+        localStorage.setItem(mccKeyWorks(area, view), worksTa.value);
         touchMCCUpdated(area);
         queueSnapshot("mcc_edit");
       });
 
       const head = document.createElement("div");
       head.className = "mcc-head";
-      const updated = fmtTime(localStorage.getItem(mccKeyUpdated(area)));
-      const ovOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
+      const updated = fmtTime(localStorage.getItem(mccKeyUpdated(area, view)));
+      const ovOn = (localStorage.getItem(mccKeyOvOn(area, view)) || "0") === "1";
       head.innerHTML = `
         <div class="mcc-title">
           ${area}
@@ -2455,6 +2594,7 @@ function momWorstStatus(obj){
   }
 
   function openMCCModal(area){
+    const view = getEffectiveMccView();
     MCC.openArea = area;
     const backdrop = document.getElementById("mccModalBackdrop");
     const title = document.getElementById("mccModalTitle");
@@ -2475,9 +2615,9 @@ function momWorstStatus(obj){
     const ovSel  = document.getElementById("mccOverrideRag");
     const ovWhy  = document.getElementById("mccOverrideReason");
     if (ovWrap && ovChk && ovSel && ovWhy){
-      const isOn = (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1";
-      const rag  = normaliseRag(localStorage.getItem(mccKeyOvRag(area)));
-      const why  = localStorage.getItem(mccKeyOvWhy(area)) || "";
+      const isOn = (localStorage.getItem(mccKeyOvOn(area, view)) || "0") === "1";
+      const rag  = normaliseRag(localStorage.getItem(mccKeyOvRag(area, view)));
+      const why  = localStorage.getItem(mccKeyOvWhy(area, view)) || "";
       ovChk.checked = isOn;
       ovSel.value = (rag === "amber" || rag === "red") ? rag : "amber";
       ovWhy.value = why;
@@ -2496,8 +2636,8 @@ function momWorstStatus(obj){
     // Build form cards
     grid.innerHTML = "";
     mccSectionsFor(area).forEach(sec => {
-      const current = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec)));
-      const mit = (localStorage.getItem(mccKeyMit(area, sec)) || "").trim();
+      const current = normaliseRag(localStorage.getItem(mccKeyStatus(area, sec, view)));
+      const mit = (localStorage.getItem(mccKeyMit(area, sec, view)) || "").trim();
 
       const card = document.createElement("div");
       card.className = "mcc-form-card";
@@ -2528,7 +2668,7 @@ function momWorstStatus(obj){
       mitTa.value = mit;
       const chipsWrap = mitWrap.querySelector(".mcc-chips");
       const opts = mccMissingOptions(area, sec);
-      const savedMissing = mccLoadMissing(area, sec);
+      const savedMissing = mccLoadMissing(area, sec, view);
       if (chipsWrap && opts.length){
         chipsWrap.innerHTML = "";
         opts.forEach(opt => {
@@ -2542,8 +2682,8 @@ function momWorstStatus(obj){
             // persist missing competencies selection immediately (Supabase-first, local as backup)
             try {
               const selected = Array.from(chipsWrap.querySelectorAll(".mcc-chip.on")).map(x => x.textContent).filter(Boolean);
-              localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(selected));
-              localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+              localStorage.setItem(mccKeyMissing(area, sec, view), JSON.stringify(selected));
+              localStorage.setItem(mccKeyUpdated(area, view), new Date().toISOString());
             } catch(e){}
             queueSnapshot("mcc_tile_change");
             updateModalPill(area, grid, worksTa, pill);
@@ -2589,7 +2729,7 @@ function momWorstStatus(obj){
       grid.appendChild(card);
     });
 
-    worksTa.value = localStorage.getItem(mccKeyWorks(area)) || "";
+    worksTa.value = localStorage.getItem(mccKeyWorks(area, view)) || "";
     worksTa.addEventListener("input", () => updateModalPill(area, grid, worksTa, pill), { once: true });
 
     updateModalPill(area, grid, worksTa, pill);
@@ -2629,6 +2769,7 @@ function momWorstStatus(obj){
   }
 
   function saveMCCModal(){
+    const view = getEffectiveMccView();
     const area = MCC.openArea;
     if (!area) return;
 
@@ -2644,13 +2785,13 @@ function momWorstStatus(obj){
     if (ovOn){
       const rag = normaliseRag(ovSel ? ovSel.value : "amber");
       const why = (ovWhy ? (ovWhy.value || "").trim() : "");
-      localStorage.setItem(mccKeyOvOn(area), "1");
-      localStorage.setItem(mccKeyOvRag(area), (rag === "red" ? "red" : "amber"));
-      localStorage.setItem(mccKeyOvWhy(area), why);
+      localStorage.setItem(mccKeyOvOn(area, view), "1");
+      localStorage.setItem(mccKeyOvRag(area, view), (rag === "red" ? "red" : "amber"));
+      localStorage.setItem(mccKeyOvWhy(area, view), why);
     } else {
-      localStorage.setItem(mccKeyOvOn(area), "0");
-      localStorage.removeItem(mccKeyOvRag(area));
-      localStorage.removeItem(mccKeyOvWhy(area));
+      localStorage.setItem(mccKeyOvOn(area, view), "0");
+      localStorage.removeItem(mccKeyOvRag(area, view));
+      localStorage.removeItem(mccKeyOvWhy(area, view));
     }
 
     const cards = Array.from(grid.querySelectorAll(".mcc-form-card"));
@@ -2663,20 +2804,20 @@ function momWorstStatus(obj){
       const mitText = mit ? (mit.value || "").trim() : "";
       const miss = Array.from(card.querySelectorAll(".mcc-chip.on")).map(b => (b.textContent || "").trim()).filter(Boolean);
 
-      localStorage.setItem(mccKeyStatus(area, sec), rag);
+      localStorage.setItem(mccKeyStatus(area, sec, view), rag);
 
       // only keep mitigation/missing if amber/red, otherwise wipe it
       if (rag === "amber" || rag === "red") {
-        localStorage.setItem(mccKeyMit(area, sec), mitText);
-        if (miss.length) localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(miss));
-        else localStorage.removeItem(mccKeyMissing(area, sec));
+        localStorage.setItem(mccKeyMit(area, sec, view), mitText);
+        if (miss.length) localStorage.setItem(mccKeyMissing(area, sec, view), JSON.stringify(miss));
+        else localStorage.removeItem(mccKeyMissing(area, sec, view));
       } else {
-        localStorage.removeItem(mccKeyMit(area, sec));
-        localStorage.removeItem(mccKeyMissing(area, sec));
+        localStorage.removeItem(mccKeyMit(area, sec, view));
+        localStorage.removeItem(mccKeyMissing(area, sec, view));
       }
     });
 
-    localStorage.setItem(mccKeyWorks(area), worksTa.value || "");
+    localStorage.setItem(mccKeyWorks(area, view), worksTa.value || "");
     touchMCCUpdated(area);
 
     renderMCCTiles();
@@ -2688,33 +2829,34 @@ function momWorstStatus(obj){
     closeMCCModal();
   }
 
-  function resetMCCTile(area){
+  function resetMCCTile(area, view=null){
     mccSectionsFor(area).forEach(sec => {
-      localStorage.removeItem(mccKeyStatus(area, sec));
-      localStorage.removeItem(mccKeyMit(area, sec));
-      localStorage.removeItem(mccKeyMissing(area, sec));
+      localStorage.removeItem(mccKeyStatus(area, sec, view));
+      localStorage.removeItem(mccKeyMit(area, sec, view));
+      localStorage.removeItem(mccKeyMissing(area, sec, view));
     });
-    localStorage.removeItem(mccKeyWorks(area));
-    localStorage.removeItem(mccKeyUpdated(area));
-    localStorage.removeItem(mccKeyOvRag(area));
-    localStorage.removeItem(mccKeyOvWhy(area));
-    localStorage.setItem(mccKeyOvOn(area), "0");
+    localStorage.removeItem(mccKeyWorks(area, view));
+    localStorage.removeItem(mccKeyUpdated(area, view));
+    localStorage.removeItem(mccKeyOvRag(area, view));
+    localStorage.removeItem(mccKeyOvWhy(area, view));
+    localStorage.setItem(mccKeyOvOn(area, view), "0");
   }
 
   function resetOpenMCCTile(){
+    const view = getEffectiveMccView();
     const area = MCC.openArea;
     if (!area) return;
 
     mccSectionsFor(area).forEach(sec => {
-      localStorage.removeItem(mccKeyStatus(area, sec));
-      localStorage.removeItem(mccKeyMit(area, sec));
-      localStorage.removeItem(mccKeyMissing(area, sec));
+      localStorage.removeItem(mccKeyStatus(area, sec, view));
+      localStorage.removeItem(mccKeyMit(area, sec, view));
+      localStorage.removeItem(mccKeyMissing(area, sec, view));
     });
-    localStorage.removeItem(mccKeyWorks(area));
-    localStorage.removeItem(mccKeyUpdated(area));
-    localStorage.removeItem(mccKeyOvRag(area));
-    localStorage.removeItem(mccKeyOvWhy(area));
-    localStorage.setItem(mccKeyOvOn(area), "0");
+    localStorage.removeItem(mccKeyWorks(area, view));
+    localStorage.removeItem(mccKeyUpdated(area, view));
+    localStorage.removeItem(mccKeyOvRag(area, view));
+    localStorage.removeItem(mccKeyOvWhy(area, view));
+    localStorage.setItem(mccKeyOvOn(area, view), "0");
 
     renderMCCTiles();
     renderMCCCommand();
@@ -2730,49 +2872,66 @@ function momWorstStatus(obj){
   }
 
   function maybeAutoWipeMCC(){
-    const now = new Date();
-    const hours = now.getHours();
-    const mins = now.getMinutes();
-    const today = getTodayYMD();
+  // MAIN wipes daily at 05:00 (never touches command/MOM)
+  const now = new Date();
+  const hours = now.getHours();
+  const mins = now.getMinutes();
+  const today = getTodayYMD();
+  const lastMain = localStorage.getItem(MCC.wipeKey) || "";
 
-    const last = localStorage.getItem(MCC.wipeKey) || "";
-
-    // Wipe once per day when local time >= 05:00
-    if (today !== last && (hours > 5 || (hours === 5 && mins >= 0))) {
-      MCC.areas.forEach(a => resetMCCTile(a));
-      localStorage.setItem(MCC.wipeKey, today);
-      renderMCCTiles();
-      renderMCCCommand();
+  if (today !== lastMain && (hours > 5 || (hours === 5 && mins >= 0))) {
+    MCC.areas.forEach(a => resetMCCTile(a, "main"));
+    localStorage.setItem(MCC.wipeKey, today);
+    renderMCCTiles();
+    renderMCCCommand();
     syncCmdDetailsDefaultOpen();
-      queueSnapshot("mcc_autowipe");
-    }
+    queueSnapshot("mcc_autowipe");
   }
 
-  function getMccState(){
+  // PRELOADS wipe Mondays at 05:00 (sat + sun payloads only)
+  const dow = now.getDay(); // 1 = Monday
+  const lastPre = localStorage.getItem(MCC.preloadWipeKey) || "";
+
+  if (dow === 1 && today !== lastPre && (hours > 5 || (hours === 5 && mins >= 0))) {
+    ["sat","sun"].forEach(v => {
+      MCC.areas.forEach(a => resetMCCTile(a, v));
+    });
+    localStorage.setItem(MCC.preloadWipeKey, today);
+    renderMccViewBanner();
+    renderMCCTiles();
+    queueSnapshot("mcc_preload_autowipe");
+  }
+}
+
+  function getMccState(view="main"){
+    // view: main | sat | sun
+
     const state = { version: 2, last_wipe: localStorage.getItem(MCC.wipeKey) || null, areas: {} };
     MCC.areas.forEach(area => {
       state.areas[area] = {
-        critical_works: localStorage.getItem(mccKeyWorks(area)) || "",
-        last_updated: localStorage.getItem(mccKeyUpdated(area)) || null,
+        critical_works: localStorage.getItem(mccKeyWorks(area, view)) || "",
+        last_updated: localStorage.getItem(mccKeyUpdated(area, view)) || null,
         override: {
-          enabled: (localStorage.getItem(mccKeyOvOn(area)) || "0") === "1",
-          rag: normaliseRag(localStorage.getItem(mccKeyOvRag(area))),
-          reason: localStorage.getItem(mccKeyOvWhy(area)) || ""
+          enabled: (localStorage.getItem(mccKeyOvOn(area, view)) || "0") === "1",
+          rag: normaliseRag(localStorage.getItem(mccKeyOvRag(area, view))),
+          reason: localStorage.getItem(mccKeyOvWhy(area, view)) || ""
         },
         sections: {}
       };
       mccSectionsFor(area).forEach(sec => {
         state.areas[area].sections[sec] = {
-          rag: normaliseRag(localStorage.getItem(mccKeyStatus(area, sec))),
-          mitigation: localStorage.getItem(mccKeyMit(area, sec)) || "",
-          missing: mccLoadMissing(area, sec)
+          rag: normaliseRag(localStorage.getItem(mccKeyStatus(area, sec, view))),
+          mitigation: localStorage.getItem(mccKeyMit(area, sec, view)) || "",
+          missing: mccLoadMissing(area, sec, view)
         };
       });
     });
     return state;
   }
 
-  function applyMccStateToLocalStorage(mccState){
+  function applyMccStateToLocalStorage(mccState, view="main"){
+    // write into localStorage for the given view
+
     if (!mccState || !mccState.areas) return;
     if (mccState.last_wipe) localStorage.setItem(MCC.wipeKey, mccState.last_wipe);
 
@@ -2781,20 +2940,20 @@ function momWorstStatus(obj){
       if (!a) return;
 
       if (typeof a.critical_works === "string") {
-        localStorage.setItem(mccKeyWorks(area), a.critical_works);
+        localStorage.setItem(mccKeyWorks(area, view), a.critical_works);
       }
 
-      if (a.last_updated) localStorage.setItem(mccKeyUpdated(area), a.last_updated);
+      if (a.last_updated) localStorage.setItem(mccKeyUpdated(area, view), a.last_updated);
 
       // override (optional)
       if (a.override && typeof a.override === "object"){
         const en = !!a.override.enabled;
-        localStorage.setItem(mccKeyOvOn(area), en ? "1" : "0");
+        localStorage.setItem(mccKeyOvOn(area, view), en ? "1" : "0");
         const rag = normaliseRag(a.override.rag);
-        if (en) localStorage.setItem(mccKeyOvRag(area), (rag === "red" ? "red" : "amber"));
-        else localStorage.removeItem(mccKeyOvRag(area));
-        if (typeof a.override.reason === "string" && en) localStorage.setItem(mccKeyOvWhy(area), a.override.reason);
-        else localStorage.removeItem(mccKeyOvWhy(area));
+        if (en) localStorage.setItem(mccKeyOvRag(area, view), (rag === "red" ? "red" : "amber"));
+        else localStorage.removeItem(mccKeyOvRag(area, view));
+        if (typeof a.override.reason === "string" && en) localStorage.setItem(mccKeyOvWhy(area, view), a.override.reason);
+        else localStorage.removeItem(mccKeyOvWhy(area, view));
       }
 
       if (a.sections) {
@@ -2807,17 +2966,17 @@ function momWorstStatus(obj){
           if (!s) return;
 
           const rag = normaliseRag(s.rag);
-          localStorage.setItem(mccKeyStatus(area, sec), rag);
+          localStorage.setItem(mccKeyStatus(area, sec, view), rag);
 
           const mit = (s.mitigation || "").toString();
-          if ((rag === "amber" || rag === "red") && mit.trim()) localStorage.setItem(mccKeyMit(area, sec), mit);
-          else localStorage.removeItem(mccKeyMit(area, sec))
+          if ((rag === "amber" || rag === "red") && mit.trim()) localStorage.setItem(mccKeyMit(area, sec, view), mit);
+          else localStorage.removeItem(mccKeyMit(area, sec, view))
 
           // missing competencies (multi-select)
           try {
             const miss = Array.isArray(s.missing) ? s.missing.filter(Boolean) : [];
-            if (miss.length) localStorage.setItem(mccKeyMissing(area, sec), JSON.stringify(miss));
-            else localStorage.removeItem(mccKeyMissing(area, sec));
+            if (miss.length) localStorage.setItem(mccKeyMissing(area, sec, view), JSON.stringify(miss));
+            else localStorage.removeItem(mccKeyMissing(area, sec, view));
           } catch(e){}
         });
       }
@@ -2885,7 +3044,13 @@ function momWorstStatus(obj){
       version: 2,
       captured_at: new Date().toISOString(),
       teams: [],
-      mcc: getMccState(),
+      mcc: getMccState("main"),
+      mcc_preload: {
+        version: 1,
+        last_wipe: localStorage.getItem(MCC.preloadWipeKey) || null,
+        sat: getMccState("sat"),
+        sun: getMccState("sun")
+      },
       mom: getMomState()};
 
     teams.forEach(team => {
@@ -3265,7 +3430,15 @@ function momWorstStatus(obj){
       }
 
       // MCC optional
-      if (state.mcc) applyMccStateToLocalStorage(state.mcc);
+      if (state.mcc) applyMccStateToLocalStorage(state.mcc, "main");
+      if (state.mcc_preload){
+        try{
+          if (state.mcc_preload.last_wipe) localStorage.setItem(MCC.preloadWipeKey, state.mcc_preload.last_wipe);
+          if (state.mcc_preload.sat) applyMccStateToLocalStorage(state.mcc_preload.sat, "sat");
+          if (state.mcc_preload.sun) applyMccStateToLocalStorage(state.mcc_preload.sun, "sun");
+        }catch(e){}
+      }
+      renderMccViewBanner();
       // MOM optional
       if (state.mom) applyMomStateToLocalStorage(state.mom);
 
@@ -3622,7 +3795,7 @@ function momWorstStatus(obj){
 
     setCmd(area, CMD.draft);
     // Keep command updates aligned with "freshness": bump the DU last_updated too.
-    localStorage.setItem(mccKeyUpdated(area), new Date().toISOString());
+    localStorage.setItem(mccKeyUpdated(area, view), new Date().toISOString());
 
     renderMCCTiles();
     renderMCCCommand();
@@ -3754,6 +3927,7 @@ function initMccModal(){
     renderTeams();
     renderMomTiles();
     initNavTabs();
+    initMccViewButtons();
     initPhonebookView();
     initSnapshotHooks();
     initMccModal();
