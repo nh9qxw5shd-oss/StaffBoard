@@ -175,7 +175,122 @@
       justify-content: center;
     }
 
-    /* ===== Team cards (Duty board) ===== */
+    
+    /* ===== Duty snapshot tiles (thin) ===== */
+    .duty-snapshot-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .duty-snapshot-grid{ grid-template-columns: 1fr; }
+    }
+    .duty-col{
+      background:#f9fafb;
+      border:1px solid var(--border);
+      border-radius:0.9rem;
+      padding:0.75rem;
+    }
+    .duty-col-title{
+      font-size:0.78rem;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:#6b7280;
+      margin:0 0 0.6rem;
+      font-weight:800;
+    }
+    .duty-tile{
+      position:relative;
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius:0.85rem;
+      padding:0.7rem 0.85rem;
+      margin-bottom:0.5rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+      overflow:hidden;
+      min-height:72px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .duty-tile:last-child{ margin-bottom:0; }
+
+    .duty-tile.hue-green{ background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(255,255,255,0.85)); border-color: rgba(16,185,129,0.35); }
+    .duty-tile.hue-amber{ background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(255,255,255,0.85)); border-color: rgba(245,158,11,0.35); }
+    .duty-tile.hue-red{ background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(255,255,255,0.85)); border-color: rgba(239,68,68,0.35); }
+    .duty-tile.hue-grey{ background: linear-gradient(135deg, rgba(107,114,128,0.08), rgba(255,255,255,0.90)); border-color: rgba(107,114,128,0.25); }
+
+    .duty-row{
+      display:flex;
+      align-items:flex-start;
+      gap:0.6rem;
+    }
+    .duty-dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      margin-top:0.25rem;
+      flex:0 0 auto;
+      border:2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 0 0 1px rgba(17,24,39,0.10);
+    }
+    .duty-dot.green{ background:#10b981; }
+    .duty-dot.amber{ background:#f59e0b; }
+    .duty-dot.red{ background:#ef4444; }
+    .duty-dot.grey{ background:#9ca3af; }
+
+    .duty-main{ min-width:0; flex:1; }
+    .duty-name{
+      font-size:0.92rem;
+      font-weight:800;
+      color:#111827;
+      line-height:1.1;
+      margin:0;
+    }
+    .duty-meta{
+      margin-top:0.15rem;
+      font-size:0.76rem;
+      color:#6b7280;
+      display:flex;
+      gap:0.4rem;
+      flex-wrap:wrap;
+    }
+        .duty-person{
+      margin-top:0.18rem;
+      font-size:0.84rem;
+      font-weight:850;
+      color:#111827;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+.duty-meta b{ color:#111827; font-weight:750; }
+    .duty-plus{
+      position:absolute;
+      right:0.65rem;
+      bottom:0.65rem;
+      width:32px;
+      height:32px;
+      border-radius:999px;
+      border:none;
+      background:#111827;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      font-size:0.95rem;
+      font-weight:900;
+    }
+    .duty-plus:active{ transform: translateY(1px); }
+    .duty-plus[disabled]{ opacity:0.55; cursor:not-allowed; }
+
+    /* Hide detailed duty grids (now modal-driven) */
+    .duty-detail-grids{ display:none; }
+
+/* ===== Team cards (Duty board) ===== */
     .team-card {
       background: var(--card);
       border-radius: 0.75rem;
@@ -441,7 +556,7 @@
 .mcc-preload-banner .left{
   display:flex;
   align-items:center;
-  gap:0.5rem;
+  gap:0.35rem;
   flex-wrap:wrap;
 }
 .mcc-preload-banner .pill{
@@ -560,7 +675,7 @@
     .mcc-status{
       display:flex;
       align-items:center;
-      gap:0.5rem;
+      gap:0.35rem;
       font-size: 0.85rem;
       color: var(--muted);
       white-space: nowrap;
@@ -592,7 +707,7 @@
       display:grid;
       grid-template-columns: 18px 88px minmax(170px, 220px) 1fr;
       align-items:flex-start;
-      column-gap:0.5rem;
+      column-gap:0.35rem;
       row-gap:0.15rem;
       font-size: 0.85rem;
       color: #374151;
@@ -1279,19 +1394,22 @@
   <div id="view-duty">
     <div id="onDutySummary" class="card"></div>
 
-    <div class="section-block" data-section="MOM">
+    <div class="duty-detail-grids" id="dutyDetailGrids">
+
+    <div class="section-block hidden" data-section="MOM">
       <h2 class="section-title">MOM Teams</h2>
       <div class="grid" id="grid-mom"></div>
     </div>
 
-    <div class="section-block" data-section="S&T">
+    <div class="section-block hidden" data-section="S&T">
       <h2 class="section-title">S&amp;T Fault Teams</h2>
       <div class="grid" id="grid-st"></div>
     </div>
 
-    <div class="section-block" data-section="OLE">
+    <div class="section-block hidden" data-section="OLE">
       <h2 class="section-title">OLE Fault Teams</h2>
       <div class="grid" id="grid-ole"></div>
+    </div>
     </div>
   </div>
 
@@ -1416,6 +1534,26 @@
 <!-- Shared datalist for autocomplete -->
 <datalist id="phonebookNames"></datalist>
 
+
+<!-- Duty team modal -->
+<div class="modal-backdrop" id="dutyTeamModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dutyTeamModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="dutyTeamModalTitle">Team details</div>
+        <div class="modal-subtitle">Edit the live duty details for this team.</div>
+      </div>
+      <button class="modal-close" id="dutyTeamModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="dutyTeamModalBody"></div>
+    </div>
+  </div>
+</div>
+
+
+
+
 <!-- MCC modal -->
 <div class="modal-backdrop" id="mccModalBackdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mccModalTitle">
@@ -1431,7 +1569,7 @@
 
       <div class="mcc-form-card" id="mccOverrideWrap" style="background:#fff;">
         <div class="top" style="justify-content:space-between; align-items:center;">
-          <div class="name" style="display:flex; align-items:center; gap:0.5rem;">
+          <div class="name" style="display:flex; align-items:center; gap:0.35rem;">
             <span class="rag-dot grey"></span>
             <span>Declared Risk override</span>
           </div>
@@ -1440,7 +1578,7 @@
             Enable
           </label>
         </div>
-        <div class="mcc-override-fields" style="display:none; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+        <div class="mcc-override-fields" style="display:none; flex-direction:column; gap:0.35rem; margin-top:0.5rem;">
           <select class="mcc-select" id="mccOverrideRag">
             <option value="amber">Amber (Declared)</option>
             <option value="red">Red (Declared)</option>
@@ -1466,7 +1604,7 @@
 
     <div class="modal-foot">
       <div class="pill" id="mccModalStatusPill"><span class="rag-dot grey"></span><span>Not saved</span></div>
-      <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+      <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
         <button class="btn btn-ghost" id="mccModalResetBtn">Reset tile</button>
         <button class="btn btn-default" id="mccModalSaveBtn">Save changes</button>
       </div>
@@ -1650,6 +1788,23 @@
       { label: 'AM',     time: '09:00-16:00' },
       { label: 'PM',     time: '09:00-16:00' },
     ]},
+
+    { name: 'BTP North', category: 'OLE', subgroup: 'BTP', shifts: [
+      { label: 'Day Shift',   time: '07:00-19:00' },
+      { label: 'Night Shift', time: '19:00-07:00' },
+      { label: 'Additional',  time: '21:00-07:00' },
+    ]},
+    { name: 'BTP South', category: 'OLE', subgroup: 'BTP', shifts: [
+      { label: 'Day Shift',   time: '07:00-19:00' },
+      { label: 'Night Shift', time: '19:00-07:00' },
+      { label: 'Additional',  time: '21:00-07:00' },
+    ]},
+    { name: 'BTP ERU', category: 'OLE', subgroup: 'BTP', shifts: [
+      { label: 'Day Shift',   time: '07:00-19:00' },
+      { label: 'Night Shift', time: '19:00-07:00' },
+      { label: 'Additional',  time: '21:00-07:00' },
+    ]},
+
   ];
 
   // ===== Supabase config =====
@@ -1931,9 +2086,9 @@
       card.dataset.teamName = team.name;
       card.dataset.category = team.category;
 
-      const roleTag = team.category === "MOM"
+      const roleTag = team.subgroup ? team.subgroup : (team.category === "MOM"
         ? "MOM"
-        : (team.category === "OLE" ? "OLE Fault Team" : "S&T Fault Team");
+        : (team.category === "OLE" ? "OLE Fault Team" : "S&T Fault Team"));
 
       const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
       const savedMode = localStorage.getItem(modeKey) || "12h";
@@ -1944,7 +2099,7 @@
             <div class="team-title">${team.name}</div>
           </div>
           <div class="team-meta">
-            <div style="display:flex; gap:0.5rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+            <div style="display:flex; gap:0.35rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
               <span class="team-tag">${roleTag}</span>
               <label class="muted" style="font-size:0.75rem;">Shift format</label>
               <select class="mode-select" data-team="${slug}">
@@ -2034,10 +2189,20 @@
       const modeSelect = card.querySelector(".mode-select");
       if (modeSelect) {
         modeSelect.addEventListener("change", () => {
+          // Persist preference
           localStorage.setItem(`${STORAGE_PREFIX}mode_${slug}`, modeSelect.value);
+
+          // Re-render cards using the new mode
           renderTeams();
           updateOnDutyHighlighting();
           updateOnDutySummary();
+
+          // If this team is currently open in the duty modal, re-open it so the
+          // freshly rendered card (with the correct shift rows) is what the user sees.
+          if (typeof __dutyModalActiveSlug !== "undefined" && __dutyModalActiveSlug === slug) {
+            openDutyTeamModal(slug);
+          }
+
           queueSnapshot("change");
         });
       }
@@ -2156,79 +2321,211 @@
     });
   }
 
+  
   function updateOnDutySummary() {
     const container = document.getElementById("onDutySummary");
     if (!container) return;
 
     const summaryText = document.getElementById("summaryText");
-    const rows = Array.from(document.querySelectorAll(".shift-row.on-duty-row"));
-    const active = [];
 
-    rows.forEach(row => {
-      const teamCard = row.closest(".team-card");
-      if (!teamCard) return;
-      const teamName = teamCard.dataset.teamName || "";
-      const label    = row.dataset.label || "";
-      const timeInput= row.querySelector(".time-input");
-      const timeStr  = timeInput ? timeInput.value || "" : "";
-      const nameInput= row.querySelector(".name-input");
-      const name     = nameInput ? nameInput.value.trim() : "";
-      const category = teamCard.dataset.category || "";
-      const role     = category === "MOM" ? "MOM" : (category === "OLE" ? "OLE" : "S&T");
-      active.push({ teamName, label, time: timeStr, name, role });
+    // Build per-team status from the rendered (hidden) team cards
+    const byRole = { MOM: [], "S&T": [], OLE: [] };
+
+    teams.forEach(team => {
+      const slug = slugify(team.name);
+      const card = document.querySelector(`.team-card[data-team-slug="${slug}"]`);
+      const role = team.category === "MOM" ? "MOM" : (team.category === "OLE" ? "OLE" : "S&T");
+
+      let status = "grey"; // green / red / grey (amber reserved if you ever want it)
+      let lineLabel = "No active shift";
+      let lineTime  = "";
+      let lineName  = "";
+
+      if (card) {
+        const onDutyRows = Array.from(card.querySelectorAll(".shift-row.on-duty-row"));
+        const missingName = card.classList.contains("missing-name-card");
+        const onDuty = card.classList.contains("on-duty-card");
+
+        if (onDuty) {
+          status = missingName ? "red" : "green";
+          // pick first active row (if multiple, first is fine for summary)
+          const row = onDutyRows[0];
+          if (row) {
+            lineLabel = row.dataset.label || "Shift active";
+            const timeInput = row.querySelector(".time-input");
+            lineTime = timeInput ? (timeInput.value || "") : "";
+            const nameInput = row.querySelector(".name-input");
+            lineName = nameInput ? (nameInput.value.trim() || "") : "";
+            if (!lineName) lineName = "(no name booked on)";
+          } else {
+            lineLabel = missingName ? "Shift active (no name booked on)" : "Shift active";
+          }
+        }
+      }
+
+      byRole[role].push({
+        slug,
+        name: team.name,
+        status,
+        label: lineLabel,
+        time: lineTime,
+        person: lineName,
+        subgroup: (team.subgroup || null)
+      });
     });
 
+    // Sort tiles A-Z per column
+    ["MOM","S&T","OLE"].forEach(k => byRole[k].sort((a,b)=>a.name.localeCompare(b.name)));
+
+    const activeCount = Object.values(byRole).flat().filter(x => x.status !== "grey").length;
     if (summaryText) {
-      summaryText.textContent = active.length
-        ? `${active.length} active shifts based on the current timetable.`
+      summaryText.textContent = activeCount
+        ? `${activeCount} active shifts based on the current timetable.`
         : "No active shifts found based on the current timetable.";
     }
 
-    if (!active.length) {
-      container.innerHTML = `
-        <div style="font-size:0.85rem; font-weight:750; text-transform:uppercase; letter-spacing:0.08em; color:#4b5563; margin-bottom:0.5rem;">On duty snapshot</div>
-        <div style="font-size:0.85rem; color:#6b7280;">No active shifts found right now based on current time &amp; shift times.</div>
-      `;
-      return;
-    }
+    const colHtml = (title, key) => {
+      const itemsRaw = byRole[key] || [];
+      // For OLE column, keep BTP grouped at the bottom
+      const items = (key === "OLE")
+        ? [...itemsRaw.filter(x=>x.subgroup!=="BTP").sort((a,b)=>a.name.localeCompare(b.name)),
+           ...itemsRaw.filter(x=>x.subgroup==="BTP").sort((a,b)=>a.name.localeCompare(b.name))]
+        : itemsRaw;
+      let lastSub = null;
+      const tiles = items.map(item => {
+        const needsBtpHeader = (key === "OLE" && item.subgroup === "BTP" && lastSub !== "BTP");
+        if (needsBtpHeader) lastSub = "BTP";
 
-    const groups = { MOM: [], "S&T": [], OLE: [] };
-    active.forEach(item => {
-      const key = item.role;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(item);
-    });
+        const hue = item.status === "green" ? "hue-green" : (item.status === "red" ? "hue-red" : "hue-grey");
+        const dot = item.status;
+        const metaParts = [];
+        if (item.label) metaParts.push(`<span><b>${item.label}</b></span>`);
+        if (item.time) metaParts.push(`<span>${item.time}</span>`);
+        const meta = metaParts.length ? metaParts.join('<span style="opacity:.55;">•</span>') : `<span>${escapeHtml(item.label || "")}</span>`;
+        const personLine = item.person ? escapeHtml(item.person) : "";
 
-    ["MOM", "S&T", "OLE"].forEach(k => groups[k].sort((a, b) => a.teamName.localeCompare(b.teamName)));
-
-    let html = `<div style="font-size:0.85rem; font-weight:750; text-transform:uppercase; letter-spacing:0.08em; color:#4b5563; margin-bottom:0.5rem;">On duty snapshot</div>
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:0.75rem;">`;
-
-    Object.entries(groups).forEach(([role, items]) => {
-      if (!items.length) return;
-      html += `<div style="background:#f9fafb; border-radius:0.75rem; border:1px solid #e5e7eb; padding:0.6rem;">
-        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:0.4rem;">${role} teams</div>
-        <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">`;
-      items.forEach(item => {
-        const missing = !item.name;
-        html += `
-          <span style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.55rem; border-radius:999px; border:1px solid ${missing ? "#fecaca" : "#bbf7d0"}; background:${missing ? "#fef2f2" : "#ecfdf5"}; font-size:0.75rem; max-width:100%; white-space:normal;">
-            <span style="color:${missing ? "#b91c1c" : "#047857"};">●</span>
-            <span><strong>${item.teamName}</strong></span>
-            <span style="color:#6b7280;">${item.label}</span>
-            <span>${item.time || ""}</span>
-            <span style="color:${missing ? "#b91c1c" : "#111827"};">${missing ? "(no name booked on)" : item.name}</span>
-          </span>
+        const header = needsBtpHeader ? `<div class="duty-subtitle">BTP</div>` : ``;
+        return `${header}
+          <div class="duty-tile ${hue}">
+            <div class="duty-row">
+              <span class="duty-dot ${dot}"></span>
+              <div class="duty-main">
+                <div class="duty-name">${escapeHtml(item.name)}</div>
+                <div class="duty-meta">${meta}</div>
+                <div class="duty-person">${personLine}</div>
+              </div>
+            </div>
+            <button class="duty-plus" type="button" aria-label="Open team details" data-open-team="${item.slug}">+</button>
+          </div>
         `;
-      });
-      html += `</div></div>`;
-    });
+      }).join("");
 
-    html += `</div>`;
-    container.innerHTML = html;
+      return `
+        <div class="duty-col">
+          <div class="duty-col-title">${escapeHtml(title)}</div>
+          ${tiles || `<div class="muted" style="font-size:0.82rem;">No teams found.</div>`}
+        </div>
+      `;
+    };
+
+    container.innerHTML = `
+      <div style="font-size:0.85rem; font-weight:750; text-transform:uppercase; letter-spacing:0.08em; color:#4b5563; margin-bottom:0.65rem;">On duty snapshot</div>
+      <div class="duty-snapshot-grid">
+        ${colHtml("MOM Teams","MOM")}
+        ${colHtml("S&T Teams","S&T")}
+        
+${colHtml("OLE Teams","OLE")}
+      </div>
+    `;
+
+    // wire + buttons
+    container.querySelectorAll("[data-open-team]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const slug = btn.getAttribute("data-open-team");
+        openDutyTeamModal(slug);
+      });
+    });
   }
 
+
+  
   /* ===========================
+     DUTY TEAM MODAL (tiles -> modal details)
+     =========================== */
+  let __dutyModalReturnPlaceholder = null;
+  let __dutyModalActiveSlug = null;
+
+  function openDutyTeamModal(slug) {
+    const backdrop = document.getElementById("dutyTeamModalBackdrop");
+    const body = document.getElementById("dutyTeamModalBody");
+    const title = document.getElementById("dutyTeamModalTitle");
+    if (!backdrop || !body) return;
+
+    // ensure any existing is returned first
+    closeDutyTeamModal(true);
+
+    const card = document.querySelector(`.team-card[data-team-slug="${slug}"]`);
+    if (!card) return;
+
+    __dutyModalActiveSlug = slug;
+
+    // placeholder so we can return it to the same place
+    const ph = document.createElement("div");
+    ph.setAttribute("data-duty-placeholder", slug);
+    card.parentNode.insertBefore(ph, card);
+    __dutyModalReturnPlaceholder = ph;
+
+    // move card into modal body
+    body.innerHTML = "";
+    body.appendChild(card);
+
+    if (title) {
+      const name = card.dataset.teamName || "Team details";
+      title.textContent = name;
+    }
+
+    backdrop.classList.add("show");
+    backdrop.setAttribute("aria-hidden","false");
+  }
+
+  function closeDutyTeamModal(skipReturn=false) {
+    const backdrop = document.getElementById("dutyTeamModalBackdrop");
+    const body = document.getElementById("dutyTeamModalBody");
+    if (backdrop) {
+      backdrop.classList.remove("show");
+      backdrop.setAttribute("aria-hidden","true");
+    }
+
+    if (!skipReturn && body && __dutyModalReturnPlaceholder && __dutyModalActiveSlug) {
+      const slug = __dutyModalActiveSlug;
+      const card = body.querySelector(`.team-card[data-team-slug="${slug}"]`);
+      if (card) {
+        __dutyModalReturnPlaceholder.parentNode.insertBefore(card, __dutyModalReturnPlaceholder);
+      }
+      __dutyModalReturnPlaceholder.remove();
+    }
+
+    if (body) body.innerHTML = "";
+    __dutyModalReturnPlaceholder = null;
+    __dutyModalActiveSlug = null;
+  }
+
+  (function wireDutyModalClose(){
+    const closeBtn = document.getElementById("dutyTeamModalClose");
+    const backdrop = document.getElementById("dutyTeamModalBackdrop");
+    if (closeBtn) closeBtn.addEventListener("click", ()=>closeDutyTeamModal());
+    if (backdrop) backdrop.addEventListener("click", (e)=>{
+      if (e.target === backdrop) closeDutyTeamModal();
+    });
+    document.addEventListener("keydown", (e)=>{
+      if (e.key === "Escape") {
+        const bd = document.getElementById("dutyTeamModalBackdrop");
+        if (bd && bd.classList.contains("show")) closeDutyTeamModal();
+      }
+    });
+  })();
+
+/* ===========================
      MAINTENANCE CRITICAL COMPETENCY (NEW)
      =========================== */
 
