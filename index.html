@@ -1495,7 +1495,7 @@
   <div class="mom-head">
     <div>
       <div class="title">MOM Coverage</div>
-      <div class="sub">Weekly cover view by MOM area. Use + to set day-by-day RAG and mitigation. Auto-wipes Mondays at <strong>05:00</strong>.</div>
+      <div class="sub">Weekly cover view by MOM area. Use + to set day-by-day RAG and mitigation. Auto-wipes Fridays at <strong>12:00</strong>.</div>
     </div>
     <div class="muted">Grey = not yet updated this week.</div>
   </div>
@@ -1622,7 +1622,7 @@
     <div class="modal-head">
       <div>
         <div class="title" id="momModalTitle">MOM cover</div>
-        <div class="sub" id="momModalSub">Set day-by-day cover position and mitigation for this MOM area. Auto-wipes Mondays at 05:00.</div>
+        <div class="sub" id="momModalSub">Set day-by-day cover position and mitigation for this MOM area. Auto-wipes Fridays at 12:00.</div>
       </div>
       <button class="x" id="momModalCloseX" aria-label="Close">✕</button>
     </div>
@@ -3662,21 +3662,21 @@ function initMccViewButtons(){
     closeMOMModal();
   }
 
-  // Weekly wipe (Monday 05:00 local)
+  // Weekly wipe (Friday 12:00 local)
   function maybeWeeklyMOMWipe(){
-    // Server-gated weekly wipe (Monday 05:00). Exec page should never trigger writes; this is for main board only.
+    // Server-gated weekly wipe (Friday 12:00). Exec page should never trigger writes; this is for main board only.
     (async () => {
       try {
         if (typeof supabaseClient === "undefined" || !supabaseClient) return;
 
         const now = new Date();
-        const isMonday = now.getDay() === 1; // Mon
+        const isFriday = now.getDay() === 5; // Fri
         const hh = now.getHours();
         const mm = now.getMinutes();
         const todayKey = now.toISOString().slice(0,10);
-        const afterFive = (hh > 5 || (hh === 5 && mm >= 0));
+        const afterNoon = (hh > 12 || (hh === 12 && mm >= 0));
 
-        if (!isMonday || !afterFive) return;
+        if (!isFriday || !afterNoon) return;
 
         const last = localStorage.getItem(MOM.wipeKey) || "";
         if (last === todayKey) return;
