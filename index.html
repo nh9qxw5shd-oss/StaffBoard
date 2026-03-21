@@ -1358,7 +1358,7 @@
   <h1>Booking On Board</h1>
   <div class="env">
     Duty board · Phonebook · Maintenance Critical Competency<br />
-    Local device storage · Shared phonebook · Auto-wipe 05:00
+    Local device storage · Shared phonebook · Manual wipe controls
   </div>
 </header>
 
@@ -1472,8 +1472,8 @@
           <div class="phonebook-header-sub">RAG view by DU area. Use the + on each tile to set competency status and mitigation.</div>
         </div>
         <div class="muted">
-          Auto wipes daily at <strong>05:00</strong>.<br/>
-          Grey = not yet updated today.
+          Saved data stays in place until manually wiped.<br/>
+          Grey = not yet updated for the selected view.
         </div>
       </div>
       <div class="mcc-preload-banner" id="mccPreloadBanner">
@@ -1495,7 +1495,7 @@
   <div class="mom-head">
     <div>
       <div class="title">MOM Coverage</div>
-      <div class="sub">Weekly cover view by MOM area. Use + to set day-by-day RAG and mitigation. Auto-wipes Fridays at <strong>12:00</strong>.</div>
+      <div class="sub">Weekly cover view by MOM area. Use + to set day-by-day RAG and mitigation. Saved data stays in place until manually wiped.</div>
     </div>
     <div class="muted">Grey = not yet updated this week.</div>
   </div>
@@ -1605,7 +1605,7 @@
     <div class="modal-foot">
       <div class="pill" id="mccModalStatusPill"><span class="rag-dot grey"></span><span>Not saved</span></div>
       <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="mccModalResetBtn">Reset tile</button>
+        <button class="btn btn-ghost" id="mccModalResetBtn">Wipe data</button>
         <button class="btn btn-default" id="mccModalSaveBtn">Save changes</button>
       </div>
     </div>
@@ -1622,7 +1622,7 @@
     <div class="modal-head">
       <div>
         <div class="title" id="momModalTitle">MOM cover</div>
-        <div class="sub" id="momModalSub">Set day-by-day cover position and mitigation for this MOM area. Auto-wipes Fridays at 12:00.</div>
+        <div class="sub" id="momModalSub">Set day-by-day cover position and mitigation for this MOM area. Saved data stays in place until manually wiped.</div>
       </div>
       <button class="x" id="momModalCloseX" aria-label="Close">✕</button>
     </div>
@@ -1643,12 +1643,39 @@
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:0.85rem; flex-wrap:wrap;">
-          <button class="btn btn-ghost" id="momModalClearBtn">Clear</button>
+          <button class="btn btn-ghost" id="momModalClearBtn">Wipe data</button>
           <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
             <button class="btn btn-ghost" id="momModalCancelBtn">Cancel</button>
             <button class="btn btn-default" id="momModalSaveBtn">Save</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm wipe modal -->
+<div class="modal-backdrop" id="confirmModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="title" id="confirmModalTitle">Confirm wipe</div>
+        <div class="sub" id="confirmModalSub">This will permanently clear the saved data for this section.</div>
+      </div>
+      <button class="modal-close" id="confirmModalClose" title="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="card" style="box-shadow:none; border:1px solid var(--border);">
+        <p id="confirmModalBody" style="margin:0; color:#374151; line-height:1.5;">Are you sure you want to wipe this saved data?</p>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <div class="muted">This cannot be undone.</div>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="confirmModalCancelBtn">Cancel</button>
+        <button class="btn btn-default" id="confirmModalConfirmBtn">Wipe data</button>
       </div>
     </div>
   </div>
@@ -3119,9 +3146,7 @@ function initMccViewButtons(){
     touchMCCUpdated(area);
 
     renderMCCTiles();
-      renderMCCCommand();
-      syncCmdDetailsDefaultOpen();
-      renderMCCCommand();
+    renderMCCCommand();
     syncCmdDetailsDefaultOpen();
     queueSnapshot("mcc_save");
     closeMCCModal();
@@ -3140,95 +3165,11 @@ function initMccViewButtons(){
     localStorage.setItem(mccKeyOvOn(area, view), "0");
   }
 
-  function resetOpenMCCTile(){
-    const view = getEffectiveMccView();
-    const area = MCC.openArea;
-    if (!area) return;
-
-    mccSectionsFor(area).forEach(sec => {
-      localStorage.removeItem(mccKeyStatus(area, sec, view));
-      localStorage.removeItem(mccKeyMit(area, sec, view));
-      localStorage.removeItem(mccKeyMissing(area, sec, view));
-    });
-    localStorage.removeItem(mccKeyWorks(area, view));
-    localStorage.removeItem(mccKeyUpdated(area, view));
-    localStorage.removeItem(mccKeyOvRag(area, view));
-    localStorage.removeItem(mccKeyOvWhy(area, view));
-    localStorage.setItem(mccKeyOvOn(area, view), "0");
-
-    renderMCCTiles();
-    renderMCCCommand();
-    syncCmdDetailsDefaultOpen();
-    queueSnapshot("mcc_reset");
-    closeMCCModal();
-  }
-
   function getTodayYMD(){
     const d = new Date();
     const pad = n => n.toString().padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   }
-
-  function maybeAutoWipeMCC(){
-  // Server-gated wipes (prevents "new device at 07:44 wipes the board" nonsense)
-  // MAIN wipes daily at 05:00 (never touches command/MOM)
-  (async () => {
-    try {
-      if (typeof supabaseClient === "undefined" || !supabaseClient) return;
-
-      const now = new Date();
-      const hours = now.getHours();
-      const mins = now.getMinutes();
-      const today = getTodayYMD();
-
-      const afterFive = (hours > 5 || (hours === 5 && mins >= 0));
-
-      // MAIN (daily)
-      if (afterFive) {
-        const lastMain = localStorage.getItem(MCC.wipeKey) || "";
-        if (today !== lastMain) {
-          const { data, error } = await supabaseClient.rpc("try_mcc_daily_wipe", {
-            p_board_id: BOARD_ID,
-            p_today: today
-          });
-          if (!error && data === true) {
-            MCC.areas.forEach(a => resetMCCTile(a, "main"));
-            renderMCCTiles();
-            renderMCCCommand();
-            syncCmdDetailsDefaultOpen();
-            // Use allowed snapshot type
-            queueSnapshot("wipe");
-          }
-          // Whatever happened, sync local marker to avoid repeated RPC calls
-          localStorage.setItem(MCC.wipeKey, today);
-        }
-      }
-
-      // PRELOADS (weekly, Monday 05:00)
-      const dow = now.getDay(); // 1 = Monday
-      if (dow === 1 && afterFive) {
-        const lastPre = localStorage.getItem(MCC.preloadWipeKey) || "";
-        if (today !== lastPre) {
-          const { data, error } = await supabaseClient.rpc("try_mcc_preload_weekly_wipe", {
-            p_board_id: BOARD_ID,
-            p_today: today
-          });
-          if (!error && data === true) {
-            ["sat","sun"].forEach(v => {
-              MCC.areas.forEach(a => resetMCCTile(a, v));
-            });
-            renderMccViewBanner();
-            renderMCCTiles();
-            queueSnapshot("wipe");
-          }
-          localStorage.setItem(MCC.preloadWipeKey, today);
-        }
-      }
-    } catch (e) {
-      console.warn("Wipe gate check failed (continuing without wiping).", e);
-    }
-  })();
-}
 
   function getMccState(view="main"){
     // view: main | sat | sun
@@ -3311,7 +3252,7 @@ function initMccViewButtons(){
   }
 
 
-  // Command & Additional Resources are persisted separately so MCC daily auto-wipe never touches them.
+  // Command & Additional Resources are persisted separately so manual MCC wipes never touch them.
   function getMccCommandState(){
     const state = { version: 1, areas: {} };
     MCC.areas.forEach(area => {
@@ -3356,8 +3297,6 @@ function initMccViewButtons(){
 
         // On entering MCC, ensure tiles are current
         if (view === "mcc") {
-          maybeAutoWipeMCC();
-          maybeWeeklyMOMWipe();
           renderMCCTiles();
           renderMomTiles();
         }
@@ -3609,7 +3548,6 @@ function initMccViewButtons(){
           mitBox.style.display = "block";
         } else {
           mitBox.style.display = "none";
-          mitTa.value = "";
         }
         // update dot
         const dot = wrap.querySelector(".rag-dot");
@@ -3656,49 +3594,6 @@ function initMccViewButtons(){
     closeMOMModal();
   }
 
-  function clearMOMModal(){
-    if (!MOM_CURRENT_AREA) return;
-    setMomArea(MOM_CURRENT_AREA, momEmptyData());
-    closeMOMModal();
-  }
-
-  // Weekly wipe (Friday 12:00 local)
-  function maybeWeeklyMOMWipe(){
-    // Server-gated weekly wipe (Friday 12:00). Exec page should never trigger writes; this is for main board only.
-    (async () => {
-      try {
-        if (typeof supabaseClient === "undefined" || !supabaseClient) return;
-
-        const now = new Date();
-        const isFriday = now.getDay() === 5; // Fri
-        const hh = now.getHours();
-        const mm = now.getMinutes();
-        const todayKey = now.toISOString().slice(0,10);
-        const afterNoon = (hh > 12 || (hh === 12 && mm >= 0));
-
-        if (!isFriday || !afterNoon) return;
-
-        const last = localStorage.getItem(MOM.wipeKey) || "";
-        if (last === todayKey) return;
-
-        const { data, error } = await supabaseClient.rpc("try_mom_weekly_wipe", {
-          p_board_id: BOARD_ID,
-          p_today: todayKey
-        });
-
-        if (!error && data === true) {
-          MOM.areas.forEach(a => momSaveLocal(a, momEmptyData()));
-          renderMomTiles();
-          queueSnapshot("wipe");
-        }
-
-        localStorage.setItem(MOM.wipeKey, todayKey);
-      } catch (e) {
-        console.warn("MOM wipe gate check failed (continuing without wiping).", e);
-      }
-    })();
-  }
-
   // MOM state in board_state (Supabase)
   function getMomState(){
     const state = { version: 1, last_wipe: localStorage.getItem(MOM.wipeKey) || null, areas: {} };
@@ -3719,7 +3614,7 @@ function initMccViewButtons(){
     });
   }
 
-// ===== MCC Command State (Supabase-backed, not wiped at 05:00) =====
+// ===== MCC Command State (Supabase-backed, not touched by manual MCC wipes) =====
   async function loadMccCommandState() {
     try {
       const { data, error } = await supabaseClient
@@ -4176,6 +4071,127 @@ function initMccViewButtons(){
   }
 
   
+  const CONFIRM_MODAL = {
+    onConfirm: null,
+    onClose: null
+  };
+
+  function openConfirmModal({ title, subtitle, body, confirmLabel = "Confirm", onConfirm, onClose } = {}){
+    const backdrop = document.getElementById("confirmModalBackdrop");
+    const titleEl = document.getElementById("confirmModalTitle");
+    const subEl = document.getElementById("confirmModalSub");
+    const bodyEl = document.getElementById("confirmModalBody");
+    const confirmBtn = document.getElementById("confirmModalConfirmBtn");
+    if (!backdrop || !titleEl || !subEl || !bodyEl || !confirmBtn) return;
+
+    titleEl.textContent = title || "Confirm action";
+    subEl.textContent = subtitle || "Please confirm this action.";
+    bodyEl.textContent = body || "Are you sure?";
+    confirmBtn.textContent = confirmLabel;
+
+    CONFIRM_MODAL.onConfirm = (typeof onConfirm === "function") ? onConfirm : null;
+    CONFIRM_MODAL.onClose = (typeof onClose === "function") ? onClose : null;
+
+    backdrop.classList.add("show");
+    backdrop.style.display = "flex";
+    backdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeConfirmModal(runOnClose = true){
+    const backdrop = document.getElementById("confirmModalBackdrop");
+    if (!backdrop) return;
+    backdrop.classList.remove("show");
+    backdrop.style.display = "none";
+    backdrop.setAttribute("aria-hidden", "true");
+
+    const onClose = CONFIRM_MODAL.onClose;
+    CONFIRM_MODAL.onConfirm = null;
+    CONFIRM_MODAL.onClose = null;
+    if (runOnClose && typeof onClose === "function") onClose();
+  }
+
+  function confirmModalAction(){
+    const fn = CONFIRM_MODAL.onConfirm;
+    closeConfirmModal(false);
+    if (typeof fn === "function") fn();
+  }
+
+  function initConfirmModal(){
+    const backdrop = document.getElementById("confirmModalBackdrop");
+    const closeBtn = document.getElementById("confirmModalClose");
+    const cancelBtn = document.getElementById("confirmModalCancelBtn");
+    const confirmBtn = document.getElementById("confirmModalConfirmBtn");
+
+    if (closeBtn) closeBtn.onclick = () => closeConfirmModal();
+    if (cancelBtn) cancelBtn.onclick = () => closeConfirmModal();
+    if (confirmBtn) confirmBtn.onclick = confirmModalAction;
+
+    if (backdrop){
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeConfirmModal();
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const bd = document.getElementById("confirmModalBackdrop");
+      if (e.key === "Escape" && bd && bd.classList.contains("show")) closeConfirmModal();
+    });
+  }
+
+  function requestMCCWipe(){
+    const area = MCC.openArea;
+    if (!area) return;
+    const selected = getUserSelectedMccView();
+    const effective = getEffectiveMccView();
+    const view = effective;
+    const viewLabel = (view === "main") ? "main board" : (view === "sat" ? "Saturday preload" : "Sunday preload");
+    const hint = (selected === "main" && effective !== "main") ? " because Main currently resolves to the weekend preload" : "";
+
+    openConfirmModal({
+      title: `Wipe ${area} data?`,
+      subtitle: "This clears the saved competency entry for the current MCC view.",
+      body: `This will permanently wipe ${area} for the ${viewLabel}${hint}. Command Structure & Additional Resources will be kept.`,
+      confirmLabel: "Wipe data",
+      onConfirm: () => {
+        resetMCCTile(area, view);
+        if (view === "main") localStorage.setItem(MCC.wipeKey, getTodayYMD());
+        else localStorage.setItem(MCC.preloadWipeKey, getTodayYMD());
+        renderMCCTiles();
+        renderMCCCommand();
+        syncCmdDetailsDefaultOpen();
+        queueSnapshot("manual");
+        closeMCCModal();
+      },
+      onClose: () => {
+        if (area) openMCCModal(area);
+      }
+    });
+
+    closeMCCModal();
+  }
+
+  function requestMOMWipe(){
+    const area = MOM_CURRENT_AREA;
+    if (!area) return;
+
+    openConfirmModal({
+      title: `Wipe ${area} data?`,
+      subtitle: "This clears the saved MOM coverage entry for this area.",
+      body: `This will permanently wipe all saved MOM Coverage day-by-day entries and notes for ${area}.`,
+      confirmLabel: "Wipe data",
+      onConfirm: () => {
+        setMomArea(area, momEmptyData());
+        localStorage.setItem(MOM.wipeKey, getTodayYMD());
+        closeMOMModal();
+      },
+      onClose: () => {
+        if (area) openMOMModal(area);
+      }
+    });
+
+    closeMOMModal();
+  }
+
   function initMomModal(){
     const closeX = document.getElementById("momModalCloseX");
     const cancelBtn = document.getElementById("momModalCancelBtn");
@@ -4186,7 +4202,7 @@ function initMccViewButtons(){
     if (closeX) closeX.onclick = closeMOMModal;
     if (cancelBtn) cancelBtn.onclick = closeMOMModal;
     if (saveBtn) saveBtn.onclick = saveMOMModal;
-    if (clearBtn) clearBtn.onclick = clearMOMModal;
+    if (clearBtn) clearBtn.onclick = requestMOMWipe;
 
     if (backdrop){
       backdrop.addEventListener("click", (e) => {
@@ -4261,7 +4277,7 @@ function initMccModal(){
 
     if (closeBtn) closeBtn.addEventListener("click", closeMCCModal);
     if (saveBtn)  saveBtn.addEventListener("click", saveMCCModal);
-    if (resetBtn) resetBtn.addEventListener("click", resetOpenMCCTile);
+    if (resetBtn) resetBtn.addEventListener("click", requestMCCWipe);
 
     if (backdrop) {
       backdrop.addEventListener("click", (e) => {
@@ -4281,7 +4297,6 @@ function initMccModal(){
     refreshClock();
     updateOnDutyHighlighting();
     updateOnDutySummary();
-    maybeAutoWipeMCC();
   }
 
   (async () => {
@@ -4296,6 +4311,7 @@ function initMccModal(){
     initSnapshotHooks();
     initMccModal();
     initMomModal();
+    initConfirmModal();
 
     // Now the page is fully initialised; allow publishes.
     __suppressAutosave = __isLocalFile ? true : false;
@@ -4318,8 +4334,7 @@ function initMccModal(){
     refreshPhonebookDatalist();
     updateAllPhoneMarks();
 
-    // initial MCC render + wipe check
-    maybeAutoWipeMCC();
+    // initial MCC render
     renderMCCTiles();
     renderMCCCommand();
     syncCmdDetailsDefaultOpen();
