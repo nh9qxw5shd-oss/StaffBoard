@@ -409,12 +409,12 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
-    /* Stack the preset dropdown and the custom free-text field vertically so the
-       revealed input stays inside the Time column (the table cells are nowrap). */
+    /* Stack the preset dropdown and the custom From/To pickers vertically so they
+       stay inside the Time column (the table cells are nowrap). */
     .time-cell { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
-    .time-cell .time-input { width: 100%; }
+    .custom-range { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
 
-    .time-select {
+    .time-select, .custom-range select {
       padding: 0.3rem 0.4rem;
       border-radius: 0.5rem;
       border: 1px solid #d1d5db;
@@ -426,7 +426,7 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
-    .name-input:focus, .time-input:focus, .phone-input:focus, .time-select:focus {
+    .name-input:focus, .time-input:focus, .phone-input:focus, .time-select:focus, .custom-range select:focus {
       outline: none;
       border-color: #111827;
       box-shadow: 0 0 0 1px #11182711;
@@ -1862,6 +1862,27 @@
     { label: "22-06", value: "22:00-06:00" },
   ];
 
+  // Half-hourly times of day used by the custom From/To shift pickers, so a
+  // bespoke range is chosen from selectors rather than typed by hand.
+  const TIME_OF_DAY = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      TIME_OF_DAY.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  const normalizeTimeOfDay = t => {
+    t = String(t || "").trim();
+    if (/^\d{4}$/.test(t)) return `${t.slice(0, 2)}:${t.slice(2)}`;
+    return t;
+  };
+  function timeOfDayOptionsHtml(selected, placeholder) {
+    let html = `<option value=""${selected ? "" : " selected"}>${placeholder}</option>`;
+    html += TIME_OF_DAY.map(v =>
+      `<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`
+    ).join("");
+    return html;
+  }
+
   // ===== Supabase config =====
   const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
@@ -2211,8 +2232,8 @@
         if (isMom) {
           timeCellHtml = `<input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}">`;
         } else {
-          // Preset dropdown + a "Custom…" option that reveals a free-text field.
-          // The hidden text input always carries the effective value so the
+          // Preset dropdown + a "Custom…" option that reveals From/To time pickers.
+          // A hidden input always carries the effective "HH:MM-HH:MM" value so the
           // existing on-duty highlighting/summary code keeps reading ".time-input".
           const matchesPreset = TIME_RANGE_PRESETS.some(p => p.value === savedTime);
           const isCustom = !matchesPreset; // empty or non-matching → custom
@@ -2220,10 +2241,21 @@
             `<option value="${p.value}" ${p.value === savedTime ? "selected" : ""}>${p.label}</option>`
           ).join("");
           optionsHtml += `<option value="custom" ${isCustom ? "selected" : ""}>Custom…</option>`;
+
+          let cStart = "", cEnd = "";
+          if (isCustom && savedTime) {
+            const parts = savedTime.split("-");
+            if (parts.length === 2) { cStart = normalizeTimeOfDay(parts[0]); cEnd = normalizeTimeOfDay(parts[1]); }
+          }
+
           timeCellHtml = `
               <div class="time-cell">
                 <select class="time-select">${optionsHtml}</select>
-                <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}"${isCustom ? "" : ' style="display:none;"'}>
+                <div class="custom-range"${isCustom ? "" : ' style="display:none;"'}>
+                  <select class="time-start">${timeOfDayOptionsHtml(cStart, "From…")}</select>
+                  <select class="time-end">${timeOfDayOptionsHtml(cEnd, "To…")}</select>
+                </div>
+                <input type="hidden" class="time-input" value="${savedTime}">
               </div>`;
         }
 
@@ -2303,6 +2335,9 @@
         const nameInput  = row.querySelector(".name-input");
         const timeInput  = row.querySelector(".time-input");
         const timeSelect = row.querySelector(".time-select");
+        const timeStart  = row.querySelector(".time-start");
+        const timeEnd    = row.querySelector(".time-end");
+        const customRange = row.querySelector(".custom-range");
         const phoneInput = row.querySelector(".phone-input");
 
         const nameKey  = storageKeyName(slug, index);
@@ -2331,23 +2366,34 @@
         }
 
         if (timeSelect && timeInput) {
-          timeSelect.addEventListener("change", () => {
-            if (timeSelect.value === "custom") {
-              // Reveal the free-text field; keep any existing value as a starting point.
-              timeInput.style.display = "";
-              timeInput.focus();
-              localStorage.setItem(timeKey, timeInput.value.trim());
-            } else {
-              // Adopt the preset value and hide the free-text field.
-              timeInput.value = timeSelect.value;
-              timeInput.style.display = "none";
-              localStorage.setItem(timeKey, timeSelect.value);
-            }
+          const composeCustom = () =>
+            (timeStart && timeEnd && timeStart.value && timeEnd.value)
+              ? `${timeStart.value}-${timeEnd.value}`
+              : "";
+
+          const commitTime = value => {
+            timeInput.value = value;
+            localStorage.setItem(timeKey, value);
             touchUpdated(card);
             updateOnDutyHighlighting();
             updateOnDutySummary();
             queueSnapshot("edit");
+          };
+
+          timeSelect.addEventListener("change", () => {
+            if (timeSelect.value === "custom") {
+              // Reveal the From/To pickers; value comes from whatever is chosen.
+              if (customRange) customRange.style.display = "";
+              commitTime(composeCustom());
+            } else {
+              // Adopt the preset value and hide the From/To pickers.
+              if (customRange) customRange.style.display = "none";
+              commitTime(timeSelect.value);
+            }
           });
+
+          if (timeStart) timeStart.addEventListener("change", () => commitTime(composeCustom()));
+          if (timeEnd)   timeEnd.addEventListener("change",   () => commitTime(composeCustom()));
         }
 
         if (phoneInput) {
