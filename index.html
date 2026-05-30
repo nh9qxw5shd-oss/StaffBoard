@@ -409,6 +409,11 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
+    /* Stack the preset dropdown and the custom free-text field vertically so the
+       revealed input stays inside the Time column (the table cells are nowrap). */
+    .time-cell { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+    .time-cell .time-input { width: 100%; }
+
     .time-select {
       padding: 0.3rem 0.4rem;
       border-radius: 0.5rem;
@@ -419,7 +424,6 @@
       box-sizing: border-box;
       background: #ffffff;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      margin-bottom: 0.25rem;
     }
 
     .name-input:focus, .time-input:focus, .phone-input:focus, .time-select:focus {
@@ -2217,8 +2221,10 @@
           ).join("");
           optionsHtml += `<option value="custom" ${isCustom ? "selected" : ""}>Custom…</option>`;
           timeCellHtml = `
-              <select class="time-select">${optionsHtml}</select>
-              <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}"${isCustom ? "" : ' style="display:none;"'}>`;
+              <div class="time-cell">
+                <select class="time-select">${optionsHtml}</select>
+                <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}"${isCustom ? "" : ' style="display:none;"'}>
+              </div>`;
         }
 
         rowsHtml += `
