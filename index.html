@@ -313,6 +313,10 @@
       border-color: #f97373;
       box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
     }
+    .team-card.expired-card {
+      border-color: #f97373;
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
 
     .team-header {
       display: flex;
@@ -486,6 +490,9 @@
     }
     .card-footer.on-duty-footer .status-dot { background: var(--green); }
     .card-footer.on-duty-footer.missing-name-footer .status-dot { background: var(--red); }
+    .card-footer.expired-footer .status-dot { background: var(--red); }
+    .card-footer.expired-footer .status-label { color: var(--red); font-weight: 650; }
+    .card-footer.no-team-footer .status-dot { background: var(--grey); }
 
     /* ===== Phonebook ===== */
     .phonebook-flex {
@@ -2235,9 +2242,12 @@
           // Preset dropdown + a "Custom…" option that reveals From/To time pickers.
           // A hidden input always carries the effective "HH:MM-HH:MM" value so the
           // existing on-duty highlighting/summary code keeps reading ".time-input".
+          // A "-" value means the team is deliberately unstaffed / no team booked on.
+          const isNoTeam = savedTime === "-";
           const matchesPreset = TIME_RANGE_PRESETS.some(p => p.value === savedTime);
-          const isCustom = !matchesPreset; // empty or non-matching → custom
-          let optionsHtml = TIME_RANGE_PRESETS.map(p =>
+          const isCustom = !matchesPreset && !isNoTeam; // empty or non-matching → custom
+          let optionsHtml = `<option value="-" ${isNoTeam ? "selected" : ""}>— (no team)</option>`;
+          optionsHtml += TIME_RANGE_PRESETS.map(p =>
             `<option value="${p.value}" ${p.value === savedTime ? "selected" : ""}>${p.label}</option>`
           ).join("");
           optionsHtml += `<option value="custom" ${isCustom ? "selected" : ""}>Custom…</option>`;
@@ -2435,22 +2445,27 @@
     const cards = Array.from(document.querySelectorAll(".team-card"));
 
     cards.forEach(card => {
+      const isMom = card.dataset.category === "MOM";
       const rows = Array.from(card.querySelectorAll(".shift-row"));
       let cardOnDuty = false;
       let cardMissingName = false;
+      let hasNamedRange = false;   // a team is booked on (name + a real time range)
+      let noTeamSelected = false;  // Current Shift explicitly set to "-"
 
-      rows.forEach(row => {
+      rows.forEach((row, idx) => {
         row.classList.remove("on-duty-row", "missing-name-row");
         const timeInput = row.querySelector(".time-input");
+        const nameInput = row.querySelector(".name-input");
         const timeStr   = timeInput ? timeInput.value : "";
+        const hasName   = !!(nameInput && nameInput.value.trim());
+        if (!isMom && idx === 0 && timeStr.trim() === "-") noTeamSelected = true;
         const range     = parseRange(timeStr);
         if (!range) return;
+        if (hasName) hasNamedRange = true;
         const inRange = isNowInRange(range, nowMinutes);
         if (inRange) {
-          const nameInput = row.querySelector(".name-input");
-          const nameEmpty = !nameInput || !nameInput.value.trim();
           row.classList.add("on-duty-row");
-          if (nameEmpty) {
+          if (!hasName) {
             row.classList.add("missing-name-row");
             cardMissingName = true;
           }
@@ -2458,18 +2473,29 @@
         }
       });
 
+      // S&T / OLE / BTP teams: a booked team whose shift time has now passed
+      // turns the tile red (prompting an update) while keeping their details on
+      // show; an explicit "-" means nobody is on duty.
+      const expired = !isMom && !cardOnDuty && !noTeamSelected && hasNamedRange;
+      const noTeam  = !isMom && !cardOnDuty && noTeamSelected;
+
       card.classList.toggle("on-duty-card", cardOnDuty);
       card.classList.toggle("missing-name-card", cardOnDuty && cardMissingName);
+      card.classList.toggle("expired-card", expired);
+      card.classList.toggle("no-team-card", noTeam);
 
       const footer = card.querySelector(".card-footer");
       if (footer) {
         footer.classList.toggle("on-duty-footer", cardOnDuty);
         footer.classList.toggle("missing-name-footer", cardOnDuty && cardMissingName);
+        footer.classList.toggle("expired-footer", expired);
+        footer.classList.toggle("no-team-footer", noTeam);
         const label = footer.querySelector(".status-label");
         if (label) {
-          if (!cardOnDuty) label.textContent = "No active shift";
-          else if (cardMissingName) label.textContent = "Shift active but no name booked on";
-          else label.textContent = "Shift active";
+          if (cardOnDuty) label.textContent = cardMissingName ? "Shift active but no name booked on" : "Shift active";
+          else if (expired) label.textContent = "Update - outside of times entered";
+          else if (noTeam) label.textContent = "No team on duty";
+          else label.textContent = "No active shift";
         }
       }
     });
@@ -2499,6 +2525,8 @@
         const onDutyRows = Array.from(card.querySelectorAll(".shift-row.on-duty-row"));
         const missingName = card.classList.contains("missing-name-card");
         const onDuty = card.classList.contains("on-duty-card");
+        const expired = card.classList.contains("expired-card");
+        const noTeam = card.classList.contains("no-team-card");
 
         if (onDuty) {
           status = missingName ? "red" : "green";
@@ -2514,6 +2542,23 @@
           } else {
             lineLabel = missingName ? "Shift active (no name booked on)" : "Shift active";
           }
+        } else if (expired) {
+          // Shift time has passed: flag for update but keep the previous team's
+          // details visible until someone books the next shift on.
+          status = "red";
+          lineLabel = "Update - outside of times entered";
+          const row = Array.from(card.querySelectorAll(".shift-row")).find(r => {
+            const ni = r.querySelector(".name-input"); return ni && ni.value.trim();
+          });
+          if (row) {
+            const timeInput = row.querySelector(".time-input");
+            lineTime = timeInput ? (timeInput.value || "") : "";
+            const nameInput = row.querySelector(".name-input");
+            lineName = nameInput ? (nameInput.value.trim() || "") : "";
+          }
+        } else if (noTeam) {
+          status = "grey";
+          lineLabel = "No team on duty";
         }
       }
 
