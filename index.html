@@ -313,6 +313,10 @@
       border-color: #f97373;
       box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
     }
+    .team-card.expired-card {
+      border-color: #f97373;
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
 
     .team-header {
       display: flex;
@@ -409,7 +413,24 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
-    .name-input:focus, .time-input:focus, .phone-input:focus {
+    /* Stack the preset dropdown and the custom From/To pickers vertically so they
+       stay inside the Time column (the table cells are nowrap). */
+    .time-cell { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+    .custom-range { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+
+    .time-select, .custom-range select {
+      padding: 0.3rem 0.4rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      color: var(--ink);
+      width: 100%;
+      box-sizing: border-box;
+      background: #ffffff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .name-input:focus, .time-input:focus, .phone-input:focus, .time-select:focus, .custom-range select:focus {
       outline: none;
       border-color: #111827;
       box-shadow: 0 0 0 1px #11182711;
@@ -469,6 +490,9 @@
     }
     .card-footer.on-duty-footer .status-dot { background: var(--green); }
     .card-footer.on-duty-footer.missing-name-footer .status-dot { background: var(--red); }
+    .card-footer.expired-footer .status-dot { background: var(--red); }
+    .card-footer.expired-footer .status-label { color: var(--red); font-weight: 650; }
+    .card-footer.no-team-footer .status-dot { background: var(--grey); }
 
     /* ===== Phonebook ===== */
     .phonebook-flex {
@@ -1799,7 +1823,7 @@
       { label: 'Lates',  time: '14:00-22:00' },
       { label: 'Nights', time: '22:00-06:00' },
     ]},
-    { name: 'Kentish Town MOM', category: 'MOM', shifts: [
+    { name: 'West Hampstead MOM', category: 'MOM', shifts: [
       { label: 'Days',   time: '07:00-19:00' },
       { label: 'Nights', time: '19:00-07:00' },
     ]},
@@ -1833,6 +1857,38 @@
     ]},
 
   ];
+
+  // Time-range presets offered for S&T, OLE and BTP team shift rows.
+  // The display label is the short form; the stored value is the full HH:MM range
+  // so the existing on-duty parsing/highlighting keeps working unchanged.
+  const TIME_RANGE_PRESETS = [
+    { label: "06-18", value: "06:00-18:00" },
+    { label: "18-06", value: "18:00-06:00" },
+    { label: "06-14", value: "06:00-14:00" },
+    { label: "14-22", value: "14:00-22:00" },
+    { label: "22-06", value: "22:00-06:00" },
+  ];
+
+  // Half-hourly times of day used by the custom From/To shift pickers, so a
+  // bespoke range is chosen from selectors rather than typed by hand.
+  const TIME_OF_DAY = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      TIME_OF_DAY.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  const normalizeTimeOfDay = t => {
+    t = String(t || "").trim();
+    if (/^\d{4}$/.test(t)) return `${t.slice(0, 2)}:${t.slice(2)}`;
+    return t;
+  };
+  function timeOfDayOptionsHtml(selected, placeholder) {
+    let html = `<option value=""${selected ? "" : " selected"}>${placeholder}</option>`;
+    html += TIME_OF_DAY.map(v =>
+      `<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`
+    ).join("");
+    return html;
+  }
 
   // ===== Supabase config =====
   const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
@@ -2117,8 +2173,19 @@
         ? "MOM"
         : (team.category === "OLE" ? "OLE Fault Team" : "S&T Fault Team"));
 
+      // MOM teams keep the configurable 12h/8h shift format.
+      // S&T, OLE and BTP teams use a fixed "Current Shift" + "Additional" layout.
+      const isMom = team.category === "MOM";
+
       const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
       const savedMode = localStorage.getItem(modeKey) || "12h";
+
+      const shiftFormatHtml = isMom ? `
+              <label class="muted" style="font-size:0.75rem;">Shift format</label>
+              <select class="mode-select" data-team="${slug}">
+                <option value="12h" ${savedMode==="12h"?"selected":""}>12h (Day/Night)</option>
+                <option value="8h"  ${savedMode==="8h"?"selected":""}>8h (E/A/N)</option>
+              </select>` : "";
 
       const headerHtml = `
         <div class="team-header">
@@ -2128,11 +2195,7 @@
           <div class="team-meta">
             <div style="display:flex; gap:0.35rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
               <span class="team-tag">${roleTag}</span>
-              <label class="muted" style="font-size:0.75rem;">Shift format</label>
-              <select class="mode-select" data-team="${slug}">
-                <option value="12h" ${savedMode==="12h"?"selected":""}>12h (Day/Night)</option>
-                <option value="8h"  ${savedMode==="8h"?"selected":""}>8h (E/A/N)</option>
-              </select>
+              ${shiftFormatHtml}
             </div>
           </div>
         </div>
@@ -2141,7 +2204,12 @@
       const shiftsForCard = [];
       const mode = localStorage.getItem(modeKey) || "12h";
 
-      if (mode === "8h") {
+      if (!isMom) {
+        shiftsForCard.push(
+          { label: "Current Shift", time: "06:00-18:00" },
+          { label: "Additional", time: "" }
+        );
+      } else if (mode === "8h") {
         shiftsForCard.push(
           { label: "Early Turn", time: "06:00-14:00" },
           { label: "Afternoon Turn", time: "14:00-22:00" },
@@ -2167,11 +2235,45 @@
         const savedPhone = (localStorage.getItem(phoneKey) || "").replace(/"/g, "&quot;");
         const labelSafe  = shift.label.replace(/"/g, "&quot;");
 
+        let timeCellHtml;
+        if (isMom) {
+          timeCellHtml = `<input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}">`;
+        } else {
+          // Preset dropdown + a "Custom…" option that reveals From/To time pickers.
+          // A hidden input always carries the effective "HH:MM-HH:MM" value so the
+          // existing on-duty highlighting/summary code keeps reading ".time-input".
+          // A "-" value means the team is deliberately unstaffed / no team booked on.
+          const isNoTeam = savedTime === "-";
+          const matchesPreset = TIME_RANGE_PRESETS.some(p => p.value === savedTime);
+          const isCustom = !matchesPreset && !isNoTeam; // empty or non-matching → custom
+          let optionsHtml = `<option value="-" ${isNoTeam ? "selected" : ""}>— (no team)</option>`;
+          optionsHtml += TIME_RANGE_PRESETS.map(p =>
+            `<option value="${p.value}" ${p.value === savedTime ? "selected" : ""}>${p.label}</option>`
+          ).join("");
+          optionsHtml += `<option value="custom" ${isCustom ? "selected" : ""}>Custom…</option>`;
+
+          let cStart = "", cEnd = "";
+          if (isCustom && savedTime) {
+            const parts = savedTime.split("-");
+            if (parts.length === 2) { cStart = normalizeTimeOfDay(parts[0]); cEnd = normalizeTimeOfDay(parts[1]); }
+          }
+
+          timeCellHtml = `
+              <div class="time-cell">
+                <select class="time-select">${optionsHtml}</select>
+                <div class="custom-range"${isCustom ? "" : ' style="display:none;"'}>
+                  <select class="time-start">${timeOfDayOptionsHtml(cStart, "From…")}</select>
+                  <select class="time-end">${timeOfDayOptionsHtml(cEnd, "To…")}</select>
+                </div>
+                <input type="hidden" class="time-input" value="${savedTime}">
+              </div>`;
+        }
+
         rowsHtml += `
           <tr class="shift-row" data-team="${slug}" data-index="${index}" data-label="${labelSafe}">
             <td class="shift-label">${shift.label}</td>
             <td class="shift-time">
-              <input type="text" class="time-input" placeholder="HHMM-HHMM" value="${savedTime}">
+              ${timeCellHtml}
             </td>
             <td>
               <div class="name-cell">
@@ -2242,6 +2344,10 @@
       rows.forEach((row, index) => {
         const nameInput  = row.querySelector(".name-input");
         const timeInput  = row.querySelector(".time-input");
+        const timeSelect = row.querySelector(".time-select");
+        const timeStart  = row.querySelector(".time-start");
+        const timeEnd    = row.querySelector(".time-end");
+        const customRange = row.querySelector(".custom-range");
         const phoneInput = row.querySelector(".phone-input");
 
         const nameKey  = storageKeyName(slug, index);
@@ -2267,6 +2373,37 @@
             updateOnDutySummary();
             queueSnapshot("edit");
           });
+        }
+
+        if (timeSelect && timeInput) {
+          const composeCustom = () =>
+            (timeStart && timeEnd && timeStart.value && timeEnd.value)
+              ? `${timeStart.value}-${timeEnd.value}`
+              : "";
+
+          const commitTime = value => {
+            timeInput.value = value;
+            localStorage.setItem(timeKey, value);
+            touchUpdated(card);
+            updateOnDutyHighlighting();
+            updateOnDutySummary();
+            queueSnapshot("edit");
+          };
+
+          timeSelect.addEventListener("change", () => {
+            if (timeSelect.value === "custom") {
+              // Reveal the From/To pickers; value comes from whatever is chosen.
+              if (customRange) customRange.style.display = "";
+              commitTime(composeCustom());
+            } else {
+              // Adopt the preset value and hide the From/To pickers.
+              if (customRange) customRange.style.display = "none";
+              commitTime(timeSelect.value);
+            }
+          });
+
+          if (timeStart) timeStart.addEventListener("change", () => commitTime(composeCustom()));
+          if (timeEnd)   timeEnd.addEventListener("change",   () => commitTime(composeCustom()));
         }
 
         if (phoneInput) {
@@ -2308,22 +2445,27 @@
     const cards = Array.from(document.querySelectorAll(".team-card"));
 
     cards.forEach(card => {
+      const isMom = card.dataset.category === "MOM";
       const rows = Array.from(card.querySelectorAll(".shift-row"));
       let cardOnDuty = false;
       let cardMissingName = false;
+      let hasNamedRange = false;   // a team is booked on (name + a real time range)
+      let noTeamSelected = false;  // Current Shift explicitly set to "-"
 
-      rows.forEach(row => {
+      rows.forEach((row, idx) => {
         row.classList.remove("on-duty-row", "missing-name-row");
         const timeInput = row.querySelector(".time-input");
+        const nameInput = row.querySelector(".name-input");
         const timeStr   = timeInput ? timeInput.value : "";
+        const hasName   = !!(nameInput && nameInput.value.trim());
+        if (!isMom && idx === 0 && timeStr.trim() === "-") noTeamSelected = true;
         const range     = parseRange(timeStr);
         if (!range) return;
+        if (hasName) hasNamedRange = true;
         const inRange = isNowInRange(range, nowMinutes);
         if (inRange) {
-          const nameInput = row.querySelector(".name-input");
-          const nameEmpty = !nameInput || !nameInput.value.trim();
           row.classList.add("on-duty-row");
-          if (nameEmpty) {
+          if (!hasName) {
             row.classList.add("missing-name-row");
             cardMissingName = true;
           }
@@ -2331,18 +2473,29 @@
         }
       });
 
+      // S&T / OLE / BTP teams: a booked team whose shift time has now passed
+      // turns the tile red (prompting an update) while keeping their details on
+      // show; an explicit "-" means nobody is on duty.
+      const expired = !isMom && !cardOnDuty && !noTeamSelected && hasNamedRange;
+      const noTeam  = !isMom && !cardOnDuty && noTeamSelected;
+
       card.classList.toggle("on-duty-card", cardOnDuty);
       card.classList.toggle("missing-name-card", cardOnDuty && cardMissingName);
+      card.classList.toggle("expired-card", expired);
+      card.classList.toggle("no-team-card", noTeam);
 
       const footer = card.querySelector(".card-footer");
       if (footer) {
         footer.classList.toggle("on-duty-footer", cardOnDuty);
         footer.classList.toggle("missing-name-footer", cardOnDuty && cardMissingName);
+        footer.classList.toggle("expired-footer", expired);
+        footer.classList.toggle("no-team-footer", noTeam);
         const label = footer.querySelector(".status-label");
         if (label) {
-          if (!cardOnDuty) label.textContent = "No active shift";
-          else if (cardMissingName) label.textContent = "Shift active but no name booked on";
-          else label.textContent = "Shift active";
+          if (cardOnDuty) label.textContent = cardMissingName ? "Shift active but no name booked on" : "Shift active";
+          else if (expired) label.textContent = "Update - outside of times entered";
+          else if (noTeam) label.textContent = "No team on duty";
+          else label.textContent = "No active shift";
         }
       }
     });
@@ -2372,6 +2525,8 @@
         const onDutyRows = Array.from(card.querySelectorAll(".shift-row.on-duty-row"));
         const missingName = card.classList.contains("missing-name-card");
         const onDuty = card.classList.contains("on-duty-card");
+        const expired = card.classList.contains("expired-card");
+        const noTeam = card.classList.contains("no-team-card");
 
         if (onDuty) {
           status = missingName ? "red" : "green";
@@ -2387,6 +2542,23 @@
           } else {
             lineLabel = missingName ? "Shift active (no name booked on)" : "Shift active";
           }
+        } else if (expired) {
+          // Shift time has passed: flag for update but keep the previous team's
+          // details visible until someone books the next shift on.
+          status = "red";
+          lineLabel = "Update - outside of times entered";
+          const row = Array.from(card.querySelectorAll(".shift-row")).find(r => {
+            const ni = r.querySelector(".name-input"); return ni && ni.value.trim();
+          });
+          if (row) {
+            const timeInput = row.querySelector(".time-input");
+            lineTime = timeInput ? (timeInput.value || "") : "";
+            const nameInput = row.querySelector(".name-input");
+            lineName = nameInput ? (nameInput.value.trim() || "") : "";
+          }
+        } else if (noTeam) {
+          status = "grey";
+          lineLabel = "No team on duty";
         }
       }
 
@@ -2582,7 +2754,7 @@ ${colHtml("OLE Teams","OLE")}
    MOM COVERAGE (WEEKLY)
    =========================== */
 const MOM = {
-  areas: ["Chesterfield","Derby","Nottingham","Leicester","Kettering","Bedford","Elstree","Kentish Town","Lincoln"],
+  areas: ["Chesterfield","Derby","Nottingham","Leicester","Kettering","Bedford","Elstree","West Hampstead","Lincoln"],
   days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
   keyPrefix: "mom_v1_",
   wipeKey: "mom_v1_last_wipe_monday"
@@ -3322,10 +3494,16 @@ function initMccViewButtons(){
     teams.forEach(team => {
       const slug = slugify(team.name);
       const shiftsForCard = [];
+      const isMom = team.category === "MOM";
       const modeKey = `${STORAGE_PREFIX}mode_${slug}`;
       const mode = localStorage.getItem(modeKey) || "12h";
 
-      if (mode === "8h") {
+      if (!isMom) {
+        shiftsForCard.push(
+          { label: "Current Shift", time: "06:00-18:00" },
+          { label: "Additional", time: "" }
+        );
+      } else if (mode === "8h") {
         shiftsForCard.push(
           { label: "Early Turn", time: "06:00-14:00" },
           { label: "Afternoon Turn", time: "14:00-22:00" },
