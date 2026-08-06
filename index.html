@@ -179,11 +179,14 @@
     /* ===== Duty snapshot tiles (thin) ===== */
     .duty-snapshot-grid{
       display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0.75rem;
       align-items:start;
     }
     @media (max-width: 1100px){
+      .duty-snapshot-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px){
       .duty-snapshot-grid{ grid-template-columns: 1fr; }
     }
     .duty-col{
@@ -1434,6 +1437,11 @@
       <h2 class="section-title">OLE Fault Teams</h2>
       <div class="grid" id="grid-ole"></div>
     </div>
+
+    <div class="section-block hidden" data-section="D&P">
+      <h2 class="section-title">D&amp;P Teams</h2>
+      <div class="grid" id="grid-dp"></div>
+    </div>
     </div>
   </div>
 
@@ -1856,6 +1864,11 @@
       { label: 'Additional',  time: '21:00-07:00' },
     ]},
 
+    { name: 'Bedford D&P Level 1', category: 'D&P', shifts: [
+      { label: 'Current Shift', time: '06:00-18:00' },
+      { label: 'Additional',    time: '' },
+    ]},
+
   ];
 
   // Time-range presets offered for S&T, OLE and BTP team shift rows.
@@ -2156,10 +2169,12 @@
     const momGrid = document.getElementById("grid-mom");
     const stGrid  = document.getElementById("grid-st");
     const oleGrid = document.getElementById("grid-ole");
+    const dpGrid  = document.getElementById("grid-dp");
 
     momGrid.innerHTML = "";
     stGrid.innerHTML  = "";
     oleGrid.innerHTML = "";
+    dpGrid.innerHTML  = "";
 
     teams.forEach(team => {
       const slug = slugify(team.name);
@@ -2171,7 +2186,8 @@
 
       const roleTag = team.subgroup ? team.subgroup : (team.category === "MOM"
         ? "MOM"
-        : (team.category === "OLE" ? "OLE Fault Team" : "S&T Fault Team"));
+        : (team.category === "OLE" ? "OLE Fault Team"
+        : (team.category === "D&P" ? "D&P" : "S&T Fault Team")));
 
       // MOM teams keep the configurable 12h/8h shift format.
       // S&T, OLE and BTP teams use a fixed "Current Shift" + "Additional" layout.
@@ -2338,6 +2354,7 @@
 
       if (team.category === "MOM") momGrid.appendChild(card);
       else if (team.category === "OLE") oleGrid.appendChild(card);
+      else if (team.category === "D&P") dpGrid.appendChild(card);
       else stGrid.appendChild(card);
 
       const rows = card.querySelectorAll(".shift-row");
@@ -2509,12 +2526,12 @@
     const summaryText = document.getElementById("summaryText");
 
     // Build per-team status from the rendered (hidden) team cards
-    const byRole = { MOM: [], "S&T": [], OLE: [] };
+    const byRole = { MOM: [], "S&T": [], OLE: [], "D&P": [] };
 
     teams.forEach(team => {
       const slug = slugify(team.name);
       const card = document.querySelector(`.team-card[data-team-slug="${slug}"]`);
-      const role = team.category === "MOM" ? "MOM" : (team.category === "OLE" ? "OLE" : "S&T");
+      const role = team.category === "MOM" ? "MOM" : (team.category === "OLE" ? "OLE" : (team.category === "D&P" ? "D&P" : "S&T"));
 
       let status = "grey"; // green / red / grey (amber reserved if you ever want it)
       let lineLabel = "No active shift";
@@ -2574,7 +2591,7 @@
     });
 
     // Sort tiles A-Z per column
-    ["MOM","S&T","OLE"].forEach(k => byRole[k].sort((a,b)=>a.name.localeCompare(b.name)));
+    ["MOM","S&T","OLE","D&P"].forEach(k => byRole[k].sort((a,b)=>a.name.localeCompare(b.name)));
 
     const activeCount = Object.values(byRole).flat().filter(x => x.status !== "grey").length;
     if (summaryText) {
@@ -2632,8 +2649,9 @@
       <div class="duty-snapshot-grid">
         ${colHtml("MOM Teams","MOM")}
         ${colHtml("S&T Teams","S&T")}
-        
+
 ${colHtml("OLE Teams","OLE")}
+        ${colHtml("D&P Teams","D&P")}
       </div>
     `;
 
