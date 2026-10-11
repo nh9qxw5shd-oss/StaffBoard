@@ -2141,6 +2141,8 @@
   }
 
   function syncPhoneMarkForRow(row) {
+    // Live sync builds cards purely from storage; never auto-fill (and write) then.
+    if (__storageSyncRendering) return;
     const nameInput  = row.querySelector(".name-input");
     const phoneInput = row.querySelector(".phone-input");
 
@@ -2165,11 +2167,13 @@
   }
 
   /* ===== Rendering duty board ===== */
-  function renderTeams() {
-    const momGrid = document.getElementById("grid-mom");
-    const stGrid  = document.getElementById("grid-st");
-    const oleGrid = document.getElementById("grid-ole");
-    const dpGrid  = document.getElementById("grid-dp");
+  // `into` (optional) renders into detached containers instead of the page grids;
+  // live sync uses it to read a fresh copy of every card from storage.
+  function renderTeams(into) {
+    const momGrid = into ? into.mom : document.getElementById("grid-mom");
+    const stGrid  = into ? into.st  : document.getElementById("grid-st");
+    const oleGrid = into ? into.ole : document.getElementById("grid-ole");
+    const dpGrid  = into ? into.dp  : document.getElementById("grid-dp");
 
     momGrid.innerHTML = "";
     stGrid.innerHTML  = "";
@@ -3007,9 +3011,10 @@ function initMccViewButtons(){
     return t.slice(0, 70).trim() + "…";
   }
 
-  function renderMCCTiles(){
+  // `gridEl` (optional) renders into a detached container (used by live sync).
+  function renderMCCTiles(gridEl){
     const view = getEffectiveMccView();
-    const grid = document.getElementById("mccGrid");
+    const grid = gridEl || document.getElementById("mccGrid");
     if (!grid) return;
     grid.innerHTML = "";
 
@@ -4250,7 +4255,7 @@ function initMccViewButtons(){
 
     setCmd(area, CMD.draft);
     // Keep command updates aligned with "freshness": bump the DU last_updated too.
-    localStorage.setItem(mccKeyUpdated(area, view), new Date().toISOString());
+    localStorage.setItem(mccKeyUpdated(area, getEffectiveMccView()), new Date().toISOString());
 
     renderMCCTiles();
     renderMCCCommand();
@@ -4487,6 +4492,171 @@ function initMccModal(){
   }
 
   /* ===========================
+     LIVE SYNC BETWEEN OPEN COPIES
+     The board can be open in several places at once (standalone tabs, and the
+     hub frame whose storage the hub keeps in step). A write made in another
+     copy lands in this copy's localStorage and fires a "storage" event here.
+     Re-read the affected panels so the most recent write shows everywhere,
+     instead of stale values sitting on screen until the next edit writes
+     them back over the newer data.
+     - The field the user is typing in is never overwritten; it is refreshed
+       once it loses focus (if storage still differs by then).
+     - A burst of keys arriving together is coalesced into one refresh.
+     - Refreshing only reads storage: it never writes localStorage or
+       publishes to Supabase, so it cannot start a write loop.
+     =========================== */
+  let __storageSyncRendering = false;   // true while cards are built off-screen from storage
+  const LIVE_SYNC = { timer: null, pending: new Set(), deferred: new Set() };
+
+  // Which panels a changed key belongs to (null key = storage cleared elsewhere).
+  function liveSyncAreasForKey(key){
+    if (key == null) return ["teams", "phonebook", "mcc", "cmd", "mom"];
+    if (key === storageKeyPhonebook()) return ["phonebook"];
+    if (key.startsWith(STORAGE_PREFIX)) return ["teams"];
+    if (key.startsWith(MCC.keyPrefix)) return key.includes("_cmd_") ? ["cmd"] : ["mcc"];
+    if (key.startsWith(MOM.keyPrefix)) return ["mom"];
+    return [];
+  }
+
+  // The form field the user is in right now, if this document has focus.
+  function liveSyncFocusedField(){
+    const el = document.activeElement;
+    if (!el || !document.hasFocus()) return null;
+    const tag = (el.tagName || "").toUpperCase();
+    return (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable) ? el : null;
+  }
+
+  // Duty board cards: build a fresh copy from storage off-screen (exactly what a
+  // reload would show) and copy its values into the live cards, so open modals,
+  // listeners and the field being typed in stay put. Returns true if deferred.
+  function liveSyncTeams(focused){
+    const into = { mom: document.createElement("div"), st: document.createElement("div"),
+                   ole: document.createElement("div"), dp: document.createElement("div") };
+    __storageSyncRendering = true;
+    try { renderTeams(into); } finally { __storageSyncRendering = false; }
+
+    let deferred = false;
+    Object.values(into).forEach(grid => Array.from(grid.children).forEach(fresh => {
+      const live = document.querySelector(`.team-card[data-team-slug="${fresh.dataset.teamSlug}"]`);
+      if (!live) return;
+      const liveFields  = Array.from(live.querySelectorAll("input, select, textarea"));
+      const freshFields = Array.from(fresh.querySelectorAll("input, select, textarea"));
+      const sameShape = liveFields.length === freshFields.length &&
+        liveFields.every((f, i) => f.className === freshFields[i].className);
+
+      if (!sameShape) {
+        // Shift format changed (different rows): swap in the fresh card, which
+        // carries its own listeners, unless the user is typing in this card.
+        if (focused && live.contains(focused)) { deferred = true; return; }
+        live.replaceWith(fresh);
+        touchUpdated(fresh);
+        return;
+      }
+
+      let changed = false;
+      liveFields.forEach((f, i) => {
+        const val = freshFields[i].value;
+        // Inputs are stored trimmed; don't treat trailing spaces as a change.
+        const same = f.tagName === "INPUT" ? f.value.trim() === val.trim() : f.value === val;
+        if (same) return;
+        if (f === focused) { deferred = true; return; }
+        f.value = val;
+        changed = true;
+      });
+      // Custom From/To pickers are shown only while the time is a custom range.
+      const freshRanges = fresh.querySelectorAll(".custom-range");
+      live.querySelectorAll(".custom-range").forEach((r, i) => {
+        if (freshRanges[i]) r.style.display = freshRanges[i].style.display;
+      });
+      if (changed) touchUpdated(live);
+    }));
+
+    updateOnDutyHighlighting();
+    updateOnDutySummary();
+    return deferred;
+  }
+
+  // MCC tiles: re-render, but if the user is typing in a tile's critical works
+  // box, swap in the fresh tiles around it and leave that box alone.
+  function liveSyncMcc(focused){
+    renderMccViewBanner();
+    const grid = document.getElementById("mccGrid");
+    if (!grid) return false;
+    if (!focused || !grid.contains(focused)) { renderMCCTiles(); return false; }
+
+    const fresh = document.createElement("div");
+    renderMCCTiles(fresh);
+    const keepTile = focused.closest(".mcc-tile");
+    let deferred = false;
+    Array.from(fresh.children).forEach(tile => {
+      const live = Array.from(grid.children).find(t => t.dataset.area === tile.dataset.area);
+      if (!live) return;
+      if (live !== keepTile) { live.replaceWith(tile); return; }
+      live.className = tile.className;
+      [".mcc-head", ".mcc-lines", ".mcc-plus"].forEach(sel => {
+        const a = live.querySelector(sel), b = tile.querySelector(sel);
+        if (a && b) a.replaceWith(b);
+      });
+      const freshTa = tile.querySelector(".mcc-works textarea");
+      if (freshTa && freshTa.value !== focused.value) deferred = true;
+    });
+    return deferred;
+  }
+
+  // The phonebook cache is only adopted when present (Supabase stays the source).
+  function liveSyncPhonebook(){
+    try {
+      const raw = localStorage.getItem(storageKeyPhonebook());
+      if (raw == null) return false;
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return false;
+      phonebook = list;
+    } catch (e) { return false; }
+    refreshPhonebookDatalist();
+    refreshPhonebookTable(document.getElementById("pbSearch")?.value || "");
+    return false;
+  }
+
+  function liveSyncFlush(){
+    LIVE_SYNC.timer = null;
+    const areas = new Set(LIVE_SYNC.pending);
+    LIVE_SYNC.pending.clear();
+    const focused = liveSyncFocusedField();
+    const run = (area, fn) => {
+      if (!areas.has(area)) return;
+      try { if (fn(focused)) LIVE_SYNC.deferred.add(area); }
+      catch (e) { console.error(`Live sync refresh failed (${area})`, e); }
+    };
+    run("phonebook", liveSyncPhonebook);
+    run("teams", liveSyncTeams);
+    run("mcc", liveSyncMcc);
+    run("cmd", () => { renderMCCCommand(); syncCmdDetailsDefaultOpen(); return false; });
+    run("mom", () => { renderMomTiles(); return false; });
+  }
+
+  function liveSyncQueue(areas){
+    areas.forEach(a => LIVE_SYNC.pending.add(a));
+    // Fixed ~100 ms window (not reset per event) so a batch refreshes once and
+    // a steady stream of keystrokes elsewhere still shows promptly.
+    if (!LIVE_SYNC.timer) LIVE_SYNC.timer = setTimeout(liveSyncFlush, 100);
+  }
+
+  function initLiveSync(){
+    window.addEventListener("storage", (e) => {
+      if (e.storageArea !== localStorage) return;
+      const areas = liveSyncAreasForKey(e.key);
+      if (areas.length) liveSyncQueue(areas);
+    });
+    // A field we skipped has lost focus: refresh its panel now.
+    document.addEventListener("focusout", () => {
+      if (!LIVE_SYNC.deferred.size) return;
+      const areas = Array.from(LIVE_SYNC.deferred);
+      LIVE_SYNC.deferred.clear();
+      liveSyncQueue(areas);
+    }, true);
+  }
+
+  /* ===========================
      Boot
      =========================== */
   function tick() {
@@ -4534,6 +4704,9 @@ function initMccModal(){
     renderMCCTiles();
     renderMCCCommand();
     syncCmdDetailsDefaultOpen();
+
+    // Pick up writes made by other open copies of the board as they happen.
+    initLiveSync();
 
     tick();
     setInterval(tick, 30_000);
