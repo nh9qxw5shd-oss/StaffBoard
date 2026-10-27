@@ -1,14 +1,13 @@
 "use client";
 
-// Command palette (Ctrl/Cmd + K): views, teams (opens the team's details) and phonebook contacts.
+// Command palette (Ctrl/Cmd + K): the board and its teams (opens the team's details).
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, BookUser, CornerDownLeft, LucideIcon, Search, Users } from "lucide-react";
+import { ArrowRight, CornerDownLeft, LucideIcon, Search, Users } from "lucide-react";
 import { useHotkey } from "@/lib/hooks";
 import { NAV } from "@/lib/nav";
 import { slugify, TEAMS } from "@/lib/duty/model";
-import { usePhonebook } from "@/lib/duty/store";
 
 const OPEN_EVENT = "duty:palette";
 export function openPalette() {
@@ -40,7 +39,6 @@ function score(e: Entry, q: string): number {
 
 export function CommandPalette() {
   const router = useRouter();
-  const book = usePhonebook();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
@@ -71,17 +69,8 @@ export function CommandPalette() {
       keywords: t.category,
       run: () => router.push(`/?team=${slugify(t.name)}`),
     }));
-    const contacts: Entry[] = book.map((c) => ({
-      id: `c-${c.name}`,
-      group: "Phonebook",
-      title: c.name,
-      hint: [c.phone, c.role, c.notes].filter(Boolean).join(" · "),
-      icon: BookUser,
-      keywords: `${c.phone} ${c.role}`,
-      run: () => router.push(`/phonebook?q=${encodeURIComponent(c.name)}`),
-    }));
-    return [...pages, ...teams, ...contacts];
-  }, [book, router]);
+    return [...pages, ...teams];
+  }, [router]);
 
   const needle = q.trim().toLowerCase();
   const results = useMemo(

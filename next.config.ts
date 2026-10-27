@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/", destination: BASE_PATH, ...temp },
       { source: "/index.html", destination: BASE_PATH, ...temp },
+      // Route resources, the phonebook and on call were removed on 27 Oct: one page now.
+      { source: `${BASE_PATH}/:page(resources|phonebook|on-call)`, destination: BASE_PATH, ...temp },
       { source: "/storage-bridge.html", destination: `${BASE_PATH}/storage-bridge.html`, ...temp },
       VIA_OVERSEER,
     ];

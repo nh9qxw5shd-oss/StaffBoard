@@ -1,19 +1,16 @@
 # Booking On Board (Duty Board)
 
-Live duty board for Derby Control: who is booked on for every MOM, S&T, OLE and D&P team, route
-resources for the MCC areas and MOM sections, the control phonebook and the on-call view.
+Live duty board for Derby Control: who is booked on for every MOM, S&T, OLE and D&P team. One
+page since 27 Oct: route resources, the phonebook page and on call were removed, and their old
+addresses (`/duty/resources`, `/duty/phonebook`, `/duty/on-call`) redirect to the board. Their
+stored data (`mcc_`/`mom_` keys, `mcc_command_state`, `contacts`) is kept unchanged; the
+contacts still feed name autocomplete and phone auto-fill.
 
-## Pages (all under `/duty`)
+## Page (`/duty`)
 - **Duty board** (`/duty`): every team in four columns. Green when the shift on now has a name,
   red when it has none or its times have passed, grey when nothing is booked. Open a team to set
   names, phones (filled from the phonebook), shift times (presets or custom From/To) and job notes.
   MOM teams can switch shift format.
-- **Route resources** (`/duty/resources`): MCC area resource levels (main view, with Saturday and
-  Sunday preloads that take over at the weekend), an override per area, critical works and
-  mitigation; MOM section cover; the command structure per area.
-- **Phonebook** (`/duty/phonebook`): shared contacts behind name autocomplete and phone auto-fill.
-  Adding a name already in the book replaces its details.
-- **On call** (`/duty/on-call`): placeholder for rostered on-call cover, as in the original.
 
 ## Data
 - Working copy in browser storage under the original keys (`booking_on_board_light_v1_`,

@@ -1,7 +1,8 @@
 # Booking On Board (StaffBoard)
 
 Next.js App Router, TypeScript strict, Tailwind v4, Supabase ("Mini Project Hub", anon key).
-Duty board, route resources, phonebook and on call; see README.md.
+The duty board, one page (route resources, phonebook and on call removed 27 Oct; their addresses
+redirect to the board). See README.md.
 
 ## Working here
 - Checks before any push: `npm run lint`, `npm run type-check`, `npm test` (`node --test`, so

@@ -1,6 +1,8 @@
-// Navigation model shared by the app shell and the command palette.
+// Navigation model shared by the app shell and the command palette. The Duty Board is one page
+// (27 Oct): route resources, the phonebook page and on call were removed; their old addresses
+// redirect to the board (next.config.ts).
 
-import { BookUser, ClipboardList, LucideIcon, PhoneCall, ShieldCheck } from "lucide-react";
+import { ClipboardList, LucideIcon } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -11,7 +13,4 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { href: "/", label: "Duty board", icon: ClipboardList, desc: "Who is on duty now in each MOM, S&T, OLE, BTP and D&P team" },
-  { href: "/resources", label: "Route resources", icon: ShieldCheck, desc: "Maintenance critical competency, MOM cover and command structure" },
-  { href: "/phonebook", label: "Phonebook", icon: BookUser, desc: "Contacts behind name autocomplete and phone auto-fill" },
-  { href: "/on-call", label: "On call", icon: PhoneCall, desc: "Rostered on-call cover (to follow)" },
 ];

@@ -10,7 +10,7 @@ const jetbrains = localFont({ src: "./fonts/jetbrains-mono.woff2", variable: "--
 
 export const metadata: Metadata = {
   title: { default: "Duty Board", template: "%s · Duty Board" },
-  description: "Booking On Board: who is on duty in each team, route resource and competency position, MOM cover, command structure and the control phonebook.",
+  description: "Booking On Board: who is on duty in each MOM, S&T, OLE, BTP and D&P team.",
 };
 
 export const viewport: Viewport = { themeColor: "#0b0e13", colorScheme: "dark light" };
